@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #F2B5C4;
+  --brand-light: #FDF6F7;
+  --brand-dark: #C48494;
+}
+
+* { 
+  box-sizing: border-box; 
+  cursor: none !important; /* Hide native cursor everywhere since we use custom bubble */
+}
+
+body { 
+  color: #1a1a1a; 
+  overflow-x: hidden;
+  background-color: #fafafa;
+}
+
+/* Base styles for the Custom Cursor - Elegant and Smooth */
+.bubble-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background-color: rgba(242, 181, 196, 0.4);
+  border: 1px solid rgba(242, 181, 196, 0.8);
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              height 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.4s, 
+              border-color 0.4s;
+  box-shadow: 0 0 20px rgba(242, 181, 196, 0.3);
+  backdrop-filter: blur(2px);
+}
+
+.bubble-cursor.hovering {
+  width: 64px; height: 64px;
+  background-color: rgba(242, 181, 196, 0.1);
+  border: 1px solid rgba(242, 181, 196, 0.5);
+  box-shadow: 0 0 30px rgba(242, 181, 196, 0.2);
+}
+
+/* Premium / Luxury Elements */
+.btn-primary {
+  @apply bg-brand text-white px-8 py-3.5 rounded-full font-bold text-sm transition-all duration-300 uppercase tracking-widest;
+  box-shadow: 0 10px 30px -10px rgba(242, 181, 196, 0.5);
+}
+.btn-primary:hover {
+  @apply bg-brand-dark -translate-y-1;
+  box-shadow: 0 20px 40px -10px rgba(242, 181, 196, 0.6);
+}
+.btn-primary:active {
+  @apply translate-y-0 shadow-sm bg-brand;
+}
+
+.btn-outline {
+  @apply bg-transparent border border-brand text-brand px-8 py-3.5 rounded-full font-bold text-sm hover:bg-brand hover:text-white transition-all duration-300 uppercase tracking-widest;
+}
+
+.brutal-card {
+  @apply rounded-2xl overflow-hidden bg-white border border-gray-100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brutal-card:hover {
+  box-shadow: 0 20px 40px rgba(242, 181, 196, 0.08);
+  transform: translateY(-8px);
+}
