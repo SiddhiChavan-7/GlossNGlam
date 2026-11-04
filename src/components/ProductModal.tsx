@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useCart } from '@/context/CartContext'
 import toast from 'react-hot-toast'
-import { Share2, X } from 'lucide-react'
+import { Share2, X, Instagram, Camera } from 'lucide-react'
 import SizingGuideModal from '@/components/SizingGuideModal'
 import { Product } from '@/lib/types'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -140,8 +140,12 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-semibold text-gray-900">Nail Size</p>
-                    <button onClick={() => setIsSizingModalOpen(true)} className="text-xs text-brand font-medium hover:underline flex items-center gap-1">
-                      How to measure?
+                    <button
+                      onClick={() => setIsSizingModalOpen(true)}
+                      className="text-xs text-brand font-medium hover:underline flex items-center gap-1"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      Size Guide (Coin Photo)
                     </button>
                   </div>
                   <div className="flex gap-2">
@@ -155,6 +159,32 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                         {size}
                       </button>
                     ))}
+                  </div>
+
+                  {/* Sizing photo & Instagram DM banner */}
+                  <div className="mt-3.5 p-3 bg-gradient-to-r from-pink-50/90 via-rose-50/70 to-pink-50/90 border border-brand/20 rounded-2xl flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="w-11 h-11 rounded-xl overflow-hidden relative flex-shrink-0 border border-brand/30 shadow-xs cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => setIsSizingModalOpen(true)}
+                        title="Click to view sizing guide"
+                      >
+                        <Image src="/size-guide.jpg" alt="Size Guide" fill className="object-cover" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-gray-900">Don&apos;t know your size?</p>
+                        <p className="text-[11px] text-gray-600">Send 2 photos with a coin on Instagram</p>
+                      </div>
+                    </div>
+                    <a
+                      href="https://ig.me/m/_glossnglam8"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand hover:opacity-90 text-white rounded-xl text-xs font-medium transition-all shadow-sm shrink-0"
+                    >
+                      <Instagram className="w-3.5 h-3.5" />
+                      <span>DM Us</span>
+                    </a>
                   </div>
                 </div>
               </div>

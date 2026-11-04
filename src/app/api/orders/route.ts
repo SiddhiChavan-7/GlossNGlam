@@ -1,18 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { query, queryOne } from '@/lib/db'
 
 export async function GET() {
-  const { data, error } = await supabaseAdmin
-    .from('orders')
-    .select('*, order_items(*)')
-    .order('created_at', { ascending: false })
-  if (error) return NextResponse.json({ error }, { status: 500 })
-  return NextResponse.json(data)
+  try {
+    const orders = await query(
+      `SELECT o.*,
+              COALESCE(
+                json_agg(oi.*) FILTER (WHERE oi.id IS NOT NULL),
+                '[]'
+              ) AS order_items
+       FROM orders o
+       LEFT JOIN order_items oi ON oi.order_id = o.id
+       GROUP BY o.id
+       ORDER BY o.created_at DESC`
+    )
+    return NextResponse.json(orders)
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
 }
 
 export async function PUT(req: NextRequest) {
-  const { id, payment_status } = await req.json()
-  const { data, error } = await supabaseAdmin.from('orders').update({ payment_status }).eq('id', id).select().single()
-  if (error) return NextResponse.json({ error }, { status: 500 })
-  return NextResponse.json(data)
+  try {
+    const { id, payment_status } = await req.json()
+    const order = await queryOne(
+      `UPDATE orders SET payment_status = $1 WHERE id = $2 RETURNING *`,
+      [payment_status, id]
+    )
+    return NextResponse.json(order)
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
 }

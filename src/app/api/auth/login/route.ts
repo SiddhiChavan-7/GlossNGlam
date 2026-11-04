@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import crypto from 'crypto'
+import { sendUserActivityNotificationToAdmin } from '@/lib/email'
 
 export async function POST(req: Request) {
   try {
@@ -12,13 +13,13 @@ export async function POST(req: Request) {
 
     const hash = crypto.createHash('sha256').update(password).digest('hex')
 
-    // Fetch user
-    const { data: users, error } = await supabase
-      .from('users')
-      .select('id, name, email, password_hash, has_claimed_giveaway')
-      .eq('email', email.toLowerCase())
+    const users = await query<{ id: string; name: string; email: string; password_hash: string; has_claimed_giveaway: boolean }>(
+      `SELECT id, name, email, password_hash, has_claimed_giveaway
+       FROM users WHERE email = $1 LIMIT 1`,
+      [email.toLowerCase()]
+    )
 
-    if (error || !users || users.length === 0) {
+    if (!users || users.length === 0) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
@@ -30,8 +31,16 @@ export async function POST(req: Request) {
 
     const { password_hash, ...safeUser } = user
 
+    // Send login notification to glossnglam8@gmail.com
+    sendUserActivityNotificationToAdmin({
+      type: 'login',
+      name: safeUser.name,
+      email: safeUser.email,
+    }).catch(err => {
+      console.error('Login email notification error:', err)
+    })
+
     const response = NextResponse.json({ success: true, user: safeUser })
-    
     response.cookies.set('glossnails_user_id', user.id, {
       httpOnly: false,
       path: '/',

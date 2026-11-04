@@ -40,6 +40,7 @@ create table if not exists products (
   image_url text,
   category_id uuid not null references categories(id) on delete restrict,
   in_stock boolean not null default true,
+  show_on_home boolean not null default true,
   nail_shapes text[] not null default array['almond','stiletto','coffin','square'],
   gallery_urls text[] default array[]::text[],
   created_at timestamptz not null default now()
@@ -216,4 +217,5 @@ values (
   '{"is_active": false, "threshold": 600, "product_id": null}'::jsonb
 ) on conflict (key) do nothing;
 
+ 
  

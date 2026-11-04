@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { supabase } from '@/lib/supabase'
+import { queryOne } from '@/lib/db'
 
 export async function GET() {
   try {
@@ -11,13 +11,12 @@ export async function GET() {
       return NextResponse.json({ user: null }, { status: 401 })
     }
 
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, name, email, has_claimed_giveaway')
-      .eq('id', userId)
-      .single()
+    const user = await queryOne<{ id: string; name: string; email: string; has_claimed_giveaway: boolean }>(
+      `SELECT id, name, email, has_claimed_giveaway FROM users WHERE id = $1`,
+      [userId]
+    )
 
-    if (error || !user) {
+    if (!user) {
       return NextResponse.json({ user: null }, { status: 401 })
     }
 

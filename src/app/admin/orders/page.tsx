@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
-import { supabase } from '@/lib/supabase'
-import { mockOrders } from '@/lib/mockData'
+
+
 import { Package, Search, ExternalLink, RefreshCw, Truck } from 'lucide-react'
 
 export default function AdminOrders() {
@@ -21,14 +21,11 @@ export default function AdminOrders() {
   const fetchOrders = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false })
-      if (error || !data || data.length === 0) {
-        setOrders(mockOrders)
-      } else {
-        setOrders(data)
-      }
+      const res = await fetch('/api/orders')
+      const data = await res.json()
+      setOrders(Array.isArray(data) ? data : [])
     } catch {
-      setOrders(mockOrders)
+      setOrders([])
     }
     setLoading(false)
   }
@@ -46,18 +43,17 @@ export default function AdminOrders() {
   const handleUpdateStatus = async (orderId: string, status: string, trackingNumber?: string) => {
     setUpdating(true)
     try {
-      // If using mock orders (offline mode), just update local state
-      if (orders === mockOrders) {
-        alert("Cannot update statuses in offline/mock mode.")
-      } else {
-        const payload: any = { fulfillment_status: status }
-        if (trackingNumber !== undefined) payload.tracking_number = trackingNumber
-        
-        await supabase.from('orders').update(payload).eq('id', orderId)
-        await fetchOrders()
-        if (selectedOrder && selectedOrder.id === orderId) {
-          setSelectedOrder({ ...selectedOrder, ...payload })
-        }
+      const payload: any = { id: orderId, fulfillment_status: status }
+      if (trackingNumber !== undefined) payload.tracking_number = trackingNumber
+      
+      await fetch('/api/orders/fulfillment', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      await fetchOrders()
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, fulfillment_status: status, tracking_number: trackingNumber ?? selectedOrder.tracking_number })
       }
     } catch (e) {
       console.error(e)

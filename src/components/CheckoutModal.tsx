@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/components/UserContext'
-import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -40,8 +39,9 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
   const applyPromo = async () => {
     try {
-      const { data, error } = await supabase.from('promo_codes').select('*').eq('code', promoCode.toUpperCase()).eq('is_active', true).single()
-      if (error || !data) throw error
+      const res = await fetch(`/api/promo?code=${encodeURIComponent(promoCode.toUpperCase())}`)
+      const data = await res.json()
+      if (!res.ok || !data) throw new Error(data?.error || 'Invalid code')
       setDiscount(data.discount_percent); toast.success(`${data.discount_percent}% discount applied! 🎉`)
     } catch {
       if (promoCode.toUpperCase() === 'GLOSS10') {

@@ -20,7 +20,8 @@ export default function Navbar({ onCartClick }: { onCartClick?: () => void }) {
         {/* Desktop links */}
         <div className="hidden md:flex gap-8 text-sm text-gray-600 font-medium">
           <Link href="/" className="hover:text-brand transition-colors">Home</Link>
-          <Link href="/#shop-grid" className="hover:text-brand transition-colors">Shop</Link>
+          <Link href="/catalog" className="hover:text-brand transition-colors font-semibold">Catalog</Link>
+          <Link href="/#shop-grid" className="hover:text-brand transition-colors">Best Sellers</Link>
         </div>
 
         <div className="flex items-center gap-4">
@@ -54,8 +55,8 @@ export default function Navbar({ onCartClick }: { onCartClick?: () => void }) {
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-4 text-sm font-medium text-gray-700">
           <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
-          <Link href="/#shop-grid" onClick={() => setMenuOpen(false)}>Shop All</Link>
-          <Link href="/#shop-grid" onClick={() => setMenuOpen(false)}>Glam</Link>
+          <Link href="/catalog" onClick={() => setMenuOpen(false)} className="text-brand font-semibold">Full Catalog</Link>
+          <Link href="/#shop-grid" onClick={() => setMenuOpen(false)}>Best Sellers</Link>
           {user && <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="text-brand">My Dashboard</Link>}
           <button onClick={() => { setMenuOpen(false); onCartClick && onCartClick(); }} className="text-left py-2 border-b border-gray-50">Cart ({totalItems})</button>
         </div>

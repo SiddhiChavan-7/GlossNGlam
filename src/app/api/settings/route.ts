@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin, supabase } from '@/lib/supabase'
+import { query, queryOne } from '@/lib/db'
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('store_settings')
-      .select('key, value')
-    
-    if (error) throw error
-
-    return NextResponse.json({ success: true, settings: data })
+    const settings = await query(`SELECT key, value FROM store_settings`)
+    return NextResponse.json({ success: true, settings })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -23,11 +18,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing key or value' }, { status: 400 })
     }
 
-    const { error } = await supabaseAdmin
-      .from('store_settings')
-      .upsert({ key, value, updated_at: new Date().toISOString() })
-
-    if (error) throw error
+    await queryOne(
+      `INSERT INTO store_settings (key, value, updated_at)
+       VALUES ($1, $2, now())
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+      [key, JSON.stringify(value)]
+    )
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

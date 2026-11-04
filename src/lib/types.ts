@@ -6,6 +6,7 @@ export interface Product {
   image_url: string
   category_id: string
   in_stock: boolean
+  show_on_home?: boolean
   nail_shapes: string[]
   gallery_urls?: string[]
   created_at: string

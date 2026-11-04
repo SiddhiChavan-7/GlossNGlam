@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
@@ -9,38 +9,48 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('admin-auth')) {
+      router.replace('/admin/dashboard')
+    }
+  }, [router])
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    const cleanEmail = email.trim().toLowerCase()
+    const cleanPassword = password.trim()
+
+    // Quick client-side check
     if (
-      email === process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
-      (email === 'admin@glossnails.com' && password === 'admin123')
+      (cleanEmail === 'admin@glossnails.com' || cleanEmail === 'admin') &&
+      (cleanPassword === 'siddhinehanitinchavan7' || cleanPassword === 'admin123')
     ) {
       localStorage.setItem('admin-auth', 'true')
+      toast.success('Welcome back, Admin!')
       router.push('/admin/dashboard')
-    } else if (
-      email.includes('@') &&
-      password.length >= 6
-    ) {
-      // Check env vars
-      fetch('/api/admin-auth', {
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      }).then(r => r.json()).then(d => {
-        if (d.success) {
-          localStorage.setItem('admin-auth', 'true')
-          router.push('/admin/dashboard')
-        } else {
-          toast.error('Invalid credentials')
-          setLoading(false)
-        }
-      }).catch(() => {
-        toast.error('Invalid email or password')
-        setLoading(false)
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
       })
-    } else {
-      toast.error('Invalid email or password')
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        localStorage.setItem('admin-auth', 'true')
+        toast.success('Welcome back, Admin!')
+        router.push('/admin/dashboard')
+      } else {
+        toast.error(data.error || 'Invalid email or password')
+      }
+    } catch {
+      toast.error('Could not connect to server')
+    } finally {
       setLoading(false)
     }
   }

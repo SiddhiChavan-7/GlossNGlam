@@ -2,8 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
-import { supabase } from '@/lib/supabase'
-import { Upload, Save } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 
@@ -15,10 +14,18 @@ export default function AdminCatalogPage() {
 
   useEffect(() => {
     if (!localStorage.getItem('admin-auth')) { router.push('/admin/login'); return }
-    // Fetch the current catalog image using a predictable name
-    const { data } = supabase.storage.from('product-images').getPublicUrl('giveaway-catalog.jpg')
-    // Added a timestamp to bust the browser cache, but only on initial load
-    setCatalogUrl(`${data.publicUrl}?t=${Date.now()}`)
+    // Fetch the current catalog URL from settings API
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.settings) {
+          const catalogSetting = data.settings.find((s: any) => s.key === 'catalog_image_url')
+          if (catalogSetting?.value?.url) {
+            setCatalogUrl(catalogSetting.value.url)
+          }
+        }
+      })
+      .catch(() => {})
   }, [router])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,22 +33,32 @@ export default function AdminCatalogPage() {
     if (!file) return
     setUploading(true)
 
-    // We overwrite the same file name 'giveaway-catalog.jpg' so we don't need a database table!
-    const { error } = await supabase.storage.from('product-images').upload('giveaway-catalog.jpg', file, {
-      upsert: true,
-      cacheControl: '10' // Keep cache short
-    })
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const data = await res.json()
 
-    if (error) { 
-      toast.error('Catalog upload failed. Note: ensure bucket policy allows upsert.')
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+
+      const uploadedUrl = data.url
+
+      // Save the URL to settings
+      const saveRes = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'catalog_image_url', value: { url: uploadedUrl } })
+      })
+
+      if (!saveRes.ok) throw new Error('Failed to save catalog URL')
+
+      setCatalogUrl(uploadedUrl)
+      toast.success('Catalog updated successfully!')
+    } catch (err: any) {
+      toast.error(err.message || 'Catalog upload failed.')
+    } finally {
       setUploading(false)
-      return 
     }
-    
-    const { data: urlData } = supabase.storage.from('product-images').getPublicUrl('giveaway-catalog.jpg')
-    setCatalogUrl(`${urlData.publicUrl}?t=${Date.now()}`) // Cache buster
-    setUploading(false)
-    toast.success('Catalog updated successfully!')
   }
 
   return (
@@ -75,7 +92,7 @@ export default function AdminCatalogPage() {
             ) : (
               <>
                 <Upload className="w-8 h-8 text-gray-500 mb-3" />
-                <span className="text-sm text-gray-400">{uploading ? 'Uploading securely to Supabase...' : 'Click to upload catalog image'}</span>
+                <span className="text-sm text-gray-400">{uploading ? 'Uploading to Cloudinary...' : 'Click to upload catalog image'}</span>
               </>
             )}
           </div>

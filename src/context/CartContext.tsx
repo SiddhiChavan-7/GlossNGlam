@@ -1,6 +1,5 @@
 'use client'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
 import { CartItem, Product } from '@/lib/types'
 
 interface CartContextType {
@@ -23,21 +22,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem('glossnails-cart')
     if (stored) setItems(JSON.parse(stored))
-      
-    // Fetch global offer settings
-    supabase.from('store_settings').select('value').eq('key', 'free_gift_offer').single().then(({ data }) => {
-      if (data?.value?.is_active && data.value.product_id) {
-        supabase.from('products').select('*').eq('id', data.value.product_id).single().then(({ data: product }) => {
-          if (product) {
-            setGiftOffer({
-              is_active: true,
-              threshold: data.value.threshold,
-              product
+
+    // Fetch global offer settings via API (no more direct Supabase)
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(({ settings }) => {
+        const offer = settings?.find((s: any) => s.key === 'free_gift_offer')?.value
+        if (offer?.is_active && offer.product_id) {
+          fetch(`/api/products`)
+            .then(r => r.json())
+            .then((products: Product[]) => {
+              const product = products.find((p: Product) => p.id === offer.product_id) || null
+              if (product) {
+                setGiftOffer({ is_active: true, threshold: offer.threshold, product })
+              }
             })
-          }
-        })
-      }
-    })
+            .catch(() => {})
+        }
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const validForGift = giftOffer?.is_active && baseTotalPrice >= giftOffer.threshold
   const displayItems = [...items]
-  
+
   if (validForGift && giftOffer.product) {
     displayItems.push({
       product: { ...giftOffer.product, price: 0 },

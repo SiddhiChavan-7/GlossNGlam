@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
-import { supabase } from '@/lib/supabase'
+
 import toast from 'react-hot-toast'
 import { Save, Settings } from 'lucide-react'
 
@@ -24,8 +24,8 @@ export default function AdminSettings() {
     // Fetch settings and products
     Promise.all([
       fetch('/api/settings').then(res => res.json()),
-      supabase.from('products').select('id, name')
-    ]).then(([settingsRes, productsRes]) => {
+      fetch('/api/products').then(res => res.json())
+    ]).then(([settingsRes, productsData]) => {
       if (settingsRes.success && settingsRes.settings) {
         const giftOffer = settingsRes.settings.find((s: any) => s.key === 'free_gift_offer')
         if (giftOffer) {
@@ -37,8 +37,8 @@ export default function AdminSettings() {
         }
       }
       
-      if (productsRes.data) {
-        setProducts(productsRes.data)
+      if (Array.isArray(productsData)) {
+        setProducts(productsData)
       }
       
       setLoading(false)

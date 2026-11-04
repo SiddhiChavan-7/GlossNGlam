@@ -1,3 +1,8 @@
+const dns = require('dns')
+try {
+  dns.setDefaultResultOrder('ipv4first')
+} catch {}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -6,7 +11,12 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: '**' },
     ],
   },
 }
 module.exports = nextConfig
+
+

@@ -2,8 +2,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
-import { supabase } from '@/lib/supabase'
-import { mockOrders, mockProducts } from '@/lib/mockData'
 import { ShoppingBag, Package, TrendingUp, IndianRupee } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
@@ -17,26 +15,19 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!localStorage.getItem('admin-auth')) { router.push('/admin/login'); return }
     Promise.all([
-      supabase.from('orders').select('*'),
-      supabase.from('products').select('*'),
-    ]).then(([ordersRes, productsRes]) => {
-      const orders = ordersRes.error ? mockOrders : (ordersRes.data || mockOrders)
-      const products = productsRes.error ? mockProducts : (productsRes.data || mockProducts)
-      
-      const revenue = orders.filter((o: any) => o.payment_status === 'paid').reduce((s: number, o: any) => s + o.total_amount, 0)
+      fetch('/api/orders').then(r => r.json()),
+      fetch('/api/products').then(r => r.json()),
+    ]).then(([ordersData, productsData]) => {
+      const orders = Array.isArray(ordersData) ? ordersData : []
+      const products = Array.isArray(productsData) ? productsData : []
+
+      const revenue = orders.filter((o: any) => o.payment_status === 'paid').reduce((s: number, o: any) => s + Number(o.total_amount || 0), 0)
       const pending = orders.filter((o: any) => o.payment_status === 'pending').length
       setStats({ orders: orders.length, products: products.length, revenue, pending })
       setAllOrders(orders)
       setRecentOrders(orders.slice(0, 5))
       setLoading(false)
     }).catch(() => {
-      const orders = mockOrders;
-      const products = mockProducts;
-      const revenue = orders.filter((o: any) => o.payment_status === 'paid').reduce((s: number, o: any) => s + o.total_amount, 0)
-      const pending = orders.filter((o: any) => o.payment_status === 'pending').length
-      setStats({ orders: orders.length, products: products.length, revenue, pending })
-      setAllOrders(orders)
-      setRecentOrders(orders.slice(0, 5))
       setLoading(false)
     })
   }, [router])
@@ -46,7 +37,7 @@ export default function AdminDashboard() {
     d.setDate(d.getDate() - (6 - i))
     const dateStr = d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
     const dailyOrders = allOrders.filter(o => new Date(o.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) === dateStr)
-    const revenue = dailyOrders.reduce((sum, o) => sum + o.total_amount, 0)
+    const revenue = dailyOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
     return { date: dateStr, revenue, orders: dailyOrders.length }
   }) : []
 
@@ -79,7 +70,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {!loading && (
+        {!loading && chartData.length > 0 && (
           <div className="mb-8 bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-xl">
             <h2 className="text-white font-semibold mb-6 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-gray-400" /> Revenue & Order Trends (Last 7 Days)</h2>
             <div className="h-72 w-full">
@@ -117,7 +108,7 @@ export default function AdminDashboard() {
                   <tr key={order.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
                     <td className="px-5 py-3 text-gray-300 font-mono text-xs">{order.id.slice(0, 8).toUpperCase()}</td>
                     <td className="px-5 py-3 text-white">{order.customer_name}</td>
-                    <td className="px-5 py-3 text-white font-medium">₹{order.total_amount.toLocaleString('en-IN')}</td>
+                    <td className="px-5 py-3 text-white font-medium">₹{Number(order.total_amount).toLocaleString('en-IN')}</td>
                     <td className="px-5 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         order.payment_status === 'paid' ? 'bg-green-900 text-green-300' : 'bg-orange-900 text-orange-300'
@@ -128,7 +119,7 @@ export default function AdminDashboard() {
                     <td className="px-5 py-3 text-gray-400 text-xs">{new Date(order.created_at).toLocaleDateString('en-IN')}</td>
                   </tr>
                 ))}
-                {recentOrders.length === 0 && (
+                {recentOrders.length === 0 && !loading && (
                   <tr><td colSpan={5} className="text-center py-10 text-gray-500">No orders yet</td></tr>
                 )}
               </tbody>

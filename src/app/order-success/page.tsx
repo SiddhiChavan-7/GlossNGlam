@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
-import { supabase } from '@/lib/supabase'
 import { Order } from '@/lib/types'
 import { CheckCircle } from 'lucide-react'
 
@@ -14,9 +13,15 @@ export default function OrderSuccessPage() {
 
   useEffect(() => {
     if (orderId) {
-      supabase.from('orders').select('*').eq('id', orderId).single().then(({ data }) => setOrder(data))
+      fetch(`/api/orders?id=${orderId}`)
+        .then(r => r.json())
+        .then(data => {
+          // The orders endpoint returns all orders; find the right one
+          const found = Array.isArray(data) ? data.find((o: Order) => o.id === orderId) : null
+          if (found) setOrder(found)
+        })
+        .catch(() => {})
     }
-    // Clear the cart if we came directly here (though it's usually cleared in the modal)
   }, [orderId])
 
   return (

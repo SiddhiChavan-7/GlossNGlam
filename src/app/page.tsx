@@ -1,19 +1,19 @@
-import { supabase } from '@/lib/supabase'
+import { query } from '@/lib/db'
 import { Product } from '@/lib/types'
-import { mockProducts } from '@/lib/mockData'
 import StoreClientView from '@/components/StoreClientView'
 
 async function getAllProducts(): Promise<Product[]> {
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*, categories(name, slug)')
-      .order('created_at', { ascending: false })
-      
-    if (error || !data || data.length === 0) throw new Error("Fallback to mock")
-    return data
+    const data = await query<any>(
+      `SELECT p.*,
+              json_build_object('name', c.name, 'slug', c.slug) AS categories
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       ORDER BY p.created_at DESC`
+    )
+    return data || []
   } catch (err) {
-    return mockProducts
+    return []
   }
 }
 

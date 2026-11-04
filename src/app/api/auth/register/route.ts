@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { query, queryOne } from '@/lib/db'
 import crypto from 'crypto'
+import { sendUserActivityNotificationToAdmin } from '@/lib/email'
 
 export async function POST(req: Request) {
   try {
@@ -10,36 +11,50 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Hash the password (simple SHA-256 for basic security)
     const hash = crypto.createHash('sha256').update(password).digest('hex')
 
-    // Insert user
-    const { data: user, error } = await supabase
-      .from('users')
-      .insert([
-        { name, email: email.toLowerCase(), password_hash: hash }
-      ])
-      .select('id, name, email')
-      .single()
-
-    if (error) {
-      if (error.code === '23505') { // unique violation
-        return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    // Check if email already exists
+    const existing = await queryOne<{ id: string }>(
+      `SELECT id FROM users WHERE email = $1`,
+      [email.toLowerCase()]
+    )
+    if (existing) {
+      return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
     }
 
+    const user = await queryOne<{ id: string; name: string; email: string }>(
+      `INSERT INTO users (name, email, password_hash)
+       VALUES ($1, $2, $3)
+       RETURNING id, name, email`,
+      [name, email.toLowerCase(), hash]
+    )
+
+    if (!user) {
+      return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
+    }
+
+    // Send email alert to glossnglam8@gmail.com
+    sendUserActivityNotificationToAdmin({
+      type: 'registration',
+      name: user.name,
+      email: user.email,
+    }).catch(err => {
+      console.error('Registration email notification error:', err)
+    })
+
     const response = NextResponse.json({ success: true, user })
-    
-    // Set a simple auth cookie
     response.cookies.set('glossnails_user_id', user.id, {
-      httpOnly: false, // allowing client access for simplicity
+      httpOnly: false,
       path: '/',
-      maxAge: 60 * 60 * 24 * 7 // 1 week
+      maxAge: 60 * 60 * 24 * 7
     })
 
     return response
   } catch (err: any) {
+    // pg unique violation code
+    if (err.code === '23505') {
+      return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
+    }
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

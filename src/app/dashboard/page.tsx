@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/UserContext'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
 export default function DashboardPage() {
@@ -26,18 +25,13 @@ export default function DashboardPage() {
   const fetchOrders = async () => {
     if (!user) return
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (!error && data) {
-        setOrders(data)
-      }
+      const res = await fetch('/api/orders')
+      const data = await res.json()
+      // Filter orders belonging to this user
+      const userOrders = Array.isArray(data)
+        ? data.filter((o: any) => o.user_id === user.id)
+        : []
+      setOrders(userOrders)
     } catch (err) {
       console.error(err)
     } finally {
