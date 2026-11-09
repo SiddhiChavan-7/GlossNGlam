@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 
 import { Product, Category } from '@/lib/types'
+import { COLOR_FAMILIES } from '@/lib/colors'
 import { Plus, Pencil, Trash2, X, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
@@ -18,6 +19,7 @@ const emptyForm = {
   in_stock: true,
   show_on_home: true,
   nail_shapes: ['almond', 'stiletto', 'coffin', 'square'],
+  colors: [] as string[],
   image_url: '',
   gallery_urls: [] as string[]
 }
@@ -94,6 +96,7 @@ export default function AdminProductsPage() {
       in_stock: p.in_stock,
       show_on_home: p.show_on_home !== false,
       nail_shapes: p.nail_shapes || [],
+      colors: p.colors || [],
       image_url: p.image_url || existingGallery[0] || '',
       gallery_urls: existingGallery
     })
@@ -184,6 +187,15 @@ export default function AdminProductsPage() {
       nail_shapes: prev.nail_shapes.includes(shape)
         ? prev.nail_shapes.filter(s => s !== shape)
         : [...prev.nail_shapes, shape]
+    }))
+  }
+
+  const toggleColor = (colorId: string) => {
+    setForm(prev => ({
+      ...prev,
+      colors: prev.colors.includes(colorId)
+        ? prev.colors.filter(c => c !== colorId)
+        : [...prev.colors, colorId]
     }))
   }
 
@@ -297,7 +309,24 @@ export default function AdminProductsPage() {
                   </div>
                   <p className="text-brand font-bold">₹{product.price.toLocaleString('en-IN')}</p>
                 </div>
-                <p className="text-gray-500 text-xs mt-2">{product.categories?.name || 'Uncategorized'}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-gray-500 text-xs">{product.categories?.name || 'Uncategorized'}</p>
+                  {product.colors && product.colors.length > 0 && (
+                    <div className="flex gap-1 items-center">
+                      {product.colors.map(colorId => {
+                        const family = COLOR_FAMILIES.find(f => f.id === colorId)
+                        return (
+                          <span
+                            key={colorId}
+                            className="w-2.5 h-2.5 rounded-full border border-gray-700"
+                            style={{ backgroundColor: family?.hex || '#ccc' }}
+                            title={family?.name || colorId}
+                          />
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -446,6 +475,35 @@ export default function AdminProductsPage() {
                         {shape}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-400 mb-2 block">
+                    Color Families <span className="text-[11px] text-gray-500">(enables instant search by color)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {COLOR_FAMILIES.map(c => {
+                      const isSelected = form.colors.includes(c.id)
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleColor(c.id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                            isSelected
+                              ? 'bg-brand/20 text-white border-brand shadow-sm'
+                              : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                          }`}
+                        >
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-black/30"
+                            style={{ backgroundColor: c.hex }}
+                          />
+                          <span>{c.name}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
 

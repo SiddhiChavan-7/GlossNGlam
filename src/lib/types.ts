@@ -8,6 +8,7 @@ export interface Product {
   in_stock: boolean
   show_on_home?: boolean
   nail_shapes: string[]
+  colors?: string[]
   gallery_urls?: string[]
   created_at: string
   categories?: { name: string; slug: string }

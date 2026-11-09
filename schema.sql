@@ -42,6 +42,7 @@ create table if not exists products (
   in_stock boolean not null default true,
   show_on_home boolean not null default true,
   nail_shapes text[] not null default array['almond','stiletto','coffin','square'],
+  colors text[] not null default array[]::text[],
   gallery_urls text[] default array[]::text[],
   created_at timestamptz not null default now()
 );

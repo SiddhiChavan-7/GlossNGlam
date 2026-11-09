@@ -54,8 +54,8 @@ export async function POST(req: NextRequest) {
     }
 
     const product = await queryOne(
-      `INSERT INTO products (name, price, description, image_url, category_id, in_stock, show_on_home, nail_shapes, gallery_urls)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO products (name, price, description, image_url, category_id, in_stock, show_on_home, nail_shapes, colors, gallery_urls)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         String(body.name).trim(),
@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
         body.in_stock ?? true,
         body.show_on_home !== undefined ? Boolean(body.show_on_home) : true,
         Array.isArray(body.nail_shapes) ? body.nail_shapes : ['almond','stiletto','coffin','square'],
+        Array.isArray(body.colors) ? body.colors : [],
         Array.isArray(body.gallery_urls) ? body.gallery_urls : []
       ]
     )
@@ -115,8 +116,9 @@ export async function PUT(req: NextRequest) {
          in_stock = COALESCE($6, in_stock),
          show_on_home = COALESCE($7, show_on_home),
          nail_shapes = COALESCE($8, nail_shapes),
-         gallery_urls = COALESCE($9, gallery_urls)
-       WHERE id = $10
+         colors = COALESCE($9, colors),
+         gallery_urls = COALESCE($10, gallery_urls)
+       WHERE id = $11
        RETURNING *`,
       [
         body.name,
@@ -127,6 +129,7 @@ export async function PUT(req: NextRequest) {
         body.in_stock,
         body.show_on_home,
         body.nail_shapes,
+        body.colors !== undefined ? (Array.isArray(body.colors) ? body.colors : [body.colors]) : null,
         body.gallery_urls,
         id
       ]

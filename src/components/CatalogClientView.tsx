@@ -10,6 +10,7 @@ import CartDrawer from './CartDrawer'
 import CheckoutModal from './CheckoutModal'
 import SizingGuideModal from './SizingGuideModal'
 import { Product, Category } from '@/lib/types'
+import { COLOR_FAMILIES, matchesSearchWithColorIntelligence, filterProductsByColorFamily } from '@/lib/colors'
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animations/FadeIn'
 import {
   Search,
@@ -43,6 +44,7 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam || 'All')
   const [selectedShape, setSelectedShape] = useState<string>('All')
+  const [selectedColor, setSelectedColor] = useState<string>('All')
   const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc'>('newest')
   const [inStockOnly, setInStockOnly] = useState(false)
 
@@ -73,21 +75,19 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
   const filteredProducts = useMemo(() => {
     let result = [...initialProducts]
 
+    // 1. Intelligent color & text search
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim()
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        (p.description && p.description.toLowerCase().includes(q)) ||
-        (p.categories?.name && p.categories.name.toLowerCase().includes(q))
-      )
+      result = result.filter(p => matchesSearchWithColorIntelligence(p, searchQuery))
     }
 
+    // 2. Category filter
     if (selectedCategory !== 'All') {
       result = result.filter(
         p => p.categories?.name?.toLowerCase() === selectedCategory.toLowerCase()
       )
     }
 
+    // 3. Shape filter
     if (selectedShape !== 'All') {
       result = result.filter(p =>
         Array.isArray(p.nail_shapes) &&
@@ -95,6 +95,12 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
       )
     }
 
+    // 4. Color family filter
+    if (selectedColor !== 'All') {
+      result = result.filter(p => filterProductsByColorFamily(p, selectedColor))
+    }
+
+    // 5. In-stock only
     if (inStockOnly) {
       result = result.filter(p => p.in_stock)
     }
@@ -106,14 +112,15 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
     })
 
     return result
-  }, [initialProducts, searchQuery, selectedCategory, selectedShape, inStockOnly, sortBy])
+  }, [initialProducts, searchQuery, selectedCategory, selectedShape, selectedColor, inStockOnly, sortBy])
 
-  const hasFilters = searchQuery !== '' || selectedCategory !== 'All' || selectedShape !== 'All' || inStockOnly
+  const hasFilters = searchQuery !== '' || selectedCategory !== 'All' || selectedShape !== 'All' || selectedColor !== 'All' || inStockOnly
 
   const resetFilters = () => {
     setSearchQuery('')
     setSelectedCategory('All')
     setSelectedShape('All')
+    setSelectedColor('All')
     setInStockOnly(false)
     setSortBy('newest')
   }
@@ -239,6 +246,44 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
             </div>
           </div>
 
+          {/* Row 3: Visual Color Swatches Filter */}
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mr-1 shrink-0">
+              Color:
+            </span>
+            <button
+              onClick={() => setSelectedColor('All')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
+                selectedColor === 'All'
+                  ? 'bg-gray-900 text-white shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              All Colors
+            </button>
+            {COLOR_FAMILIES.map(c => {
+              const isActive = selectedColor.toLowerCase() === c.id.toLowerCase()
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedColor(isActive ? 'All' : c.id)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all shrink-0 border ${
+                    isActive
+                      ? 'border-gray-900 bg-gray-900 text-white shadow-xs'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-400 bg-white'
+                  }`}
+                  title={`Filter by ${c.name}`}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0"
+                    style={{ backgroundColor: c.hex }}
+                  />
+                  <span>{c.name}</span>
+                </button>
+              )
+            })}
+          </div>
+
           {/* Active filter count & reset */}
           {hasFilters && (
             <div className="mt-3 pt-2 flex items-center justify-between text-xs text-gray-500">
@@ -246,6 +291,7 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
                 Filtered: <strong className="text-gray-900">{filteredProducts.length}</strong> sets
                 {selectedCategory !== 'All' && <span> in {selectedCategory}</span>}
                 {selectedShape !== 'All' && <span> • {selectedShape}</span>}
+                {selectedColor !== 'All' && <span> • {COLOR_FAMILIES.find(c => c.id === selectedColor)?.name || selectedColor}</span>}
               </span>
               <button
                 onClick={resetFilters}
@@ -259,7 +305,7 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
 
         {/* Minimal, High-Impact Product Grid */}
         <StaggerContainer
-          key={`${selectedCategory}-${selectedShape}-${sortBy}-${inStockOnly}-${searchQuery}`}
+          key={`${selectedCategory}-${selectedShape}-${selectedColor}-${sortBy}-${inStockOnly}-${searchQuery}`}
           className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10"
         >
           {filteredProducts.map(product => {
@@ -304,13 +350,30 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
                   {/* Product Details */}
                   <div className="flex flex-col flex-1 justify-between">
                     <div>
-                      {/* Available shapes minimal preview */}
-                      {shapes.length > 0 && (
-                        <p className="text-[10px] text-gray-400 capitalize font-medium tracking-wide mb-1">
-                          {shapes.slice(0, 3).join(' • ')}
-                          {shapes.length > 3 ? ` • +${shapes.length - 3}` : ''}
-                        </p>
-                      )}
+                      {/* Available shapes & colors preview */}
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        {shapes.length > 0 ? (
+                          <p className="text-[10px] text-gray-400 capitalize font-medium tracking-wide">
+                            {shapes.slice(0, 3).join(' • ')}
+                            {shapes.length > 3 ? ` • +${shapes.length - 3}` : ''}
+                          </p>
+                        ) : <span />}
+                        {product.colors && product.colors.length > 0 && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            {product.colors.slice(0, 3).map(colorId => {
+                              const family = COLOR_FAMILIES.find(f => f.id === colorId)
+                              return (
+                                <span
+                                  key={colorId}
+                                  className="w-2 h-2 rounded-full border border-gray-300"
+                                  style={{ backgroundColor: family?.hex || '#ccc' }}
+                                  title={family?.name || colorId}
+                                />
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
                       <h3 className="text-sm md:text-base font-medium text-gray-900 group-hover:text-brand transition-colors line-clamp-1">
                         {product.name}
                       </h3>
