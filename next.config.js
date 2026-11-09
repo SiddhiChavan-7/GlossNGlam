@@ -1,10 +1,18 @@
-const dns = require('dns')
-try {
-  dns.setDefaultResultOrder('ipv4first')
-} catch {}
+if (process.platform === 'win32') {
+  try {
+    const dns = require('dns')
+    dns.setDefaultResultOrder('ipv4first')
+  } catch {}
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

@@ -2,6 +2,8 @@ import { query } from '@/lib/db'
 import { Product } from '@/lib/types'
 import StoreClientView from '@/components/StoreClientView'
 
+export const dynamic = 'force-dynamic'
+
 async function getAllProducts(): Promise<Product[]> {
   try {
     const data = await query<any>(
