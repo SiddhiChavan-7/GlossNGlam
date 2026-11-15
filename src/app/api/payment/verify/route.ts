@@ -14,11 +14,11 @@ function toValidUuid(val: any): string | null {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const body = await req.json().catch(() => ({}))
+    const order_id = body.razorpay_order_id || body.order_id
+    const payment_id = body.razorpay_payment_id || body.payment_id
+    const signature = body.razorpay_signature || body.signature
     const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
       form,
       items,
       finalTotal,
@@ -26,7 +26,15 @@ export async function POST(req: NextRequest) {
       deliveryOption
     } = body
 
-    // 1. Verify Signature
+    // 1. Missing fields validation
+    if (!order_id || !payment_id || !signature) {
+      return NextResponse.json({
+        success: false,
+        error: 'Missing required fields: razorpay_order_id, razorpay_payment_id, and razorpay_signature are required'
+      }, { status: 400 })
+    }
+
+    // 2. Verify Signature
     const secret = process.env.RAZORPAY_KEY_SECRET
     if (!secret) {
       console.error('RAZORPAY_KEY_SECRET is not set in environment')
@@ -35,14 +43,28 @@ export async function POST(req: NextRequest) {
 
     const generatedSignature = crypto
       .createHmac('sha256', secret)
-      .update(razorpay_order_id + '|' + razorpay_payment_id)
+      .update(order_id + '|' + payment_id)
       .digest('hex')
 
-    if (generatedSignature !== razorpay_signature) {
-      return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
+    if (generatedSignature !== signature) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid payment signature. Verification failed.'
+      }, { status: 400 })
     }
 
-    // 2. Insert Order
+    // If this is a standalone verification call without an e-commerce order form
+    if (!form) {
+      return NextResponse.json({
+        success: true,
+        verified: true,
+        order_id,
+        payment_id,
+        message: 'Payment signature verified successfully'
+      })
+    }
+
+    // 3. Insert Order Into Database
     const orderNote = `${form.order_note || ''}\n[Delivery: ${deliveryOption === 'local' ? 'Local Pickup / Delivery' : 'Regular Delivery'}]`.trim()
     const validUserId = toValidUuid(userId)
 
@@ -55,7 +77,7 @@ export async function POST(req: NextRequest) {
       [
         form.customer_name, form.phone, form.email || null, form.instagram || null,
         form.address, form.pincode, form.city, form.state,
-        orderNote, validUserId, finalTotal, razorpay_payment_id
+        orderNote, validUserId, finalTotal, payment_id
       ]
     )
 
@@ -96,7 +118,7 @@ export async function POST(req: NextRequest) {
       orderNote: form.order_note,
       deliveryOption,
       totalAmount: finalTotal,
-      paymentId: razorpay_payment_id,
+      paymentId: payment_id,
       items: items.map((i: any) => ({
         product_name: i.product?.name || 'Handcrafted Nail Set',
         nail_shape: i.nail_shape,

@@ -123,8 +123,22 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
           },
           prefill: { name: form.customer_name, contact: `+91${form.phone}`, email: form.email },
           theme: { color: '#FF66A3' },
-          modal: { ondismiss: () => setLoading(false) }
+          modal: {
+            ondismiss: () => {
+              setLoading(false)
+              toast('Payment cancelled by user', { icon: 'ℹ️' })
+            }
+          }
         })
+
+        // Listen for payment failure events
+        rzp.on('payment.failed', function (response: any) {
+          console.error('Razorpay payment failed:', response.error)
+          const errorMsg = response.error?.description || response.error?.reason || 'Payment failed. Please try again.'
+          toast.error(errorMsg)
+          setLoading(false)
+        })
+
         rzp.open()
       }
 
