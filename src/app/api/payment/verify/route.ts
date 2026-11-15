@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
     } = body
 
     // 1. Verify Signature
-    const secret = process.env.RAZORPAY_KEY_SECRET!
+    const secret = process.env.RAZORPAY_KEY_SECRET
+    if (!secret) {
+      console.error('RAZORPAY_KEY_SECRET is not set in environment')
+      return NextResponse.json({ error: 'Payment gateway configuration error' }, { status: 500 })
+    }
+
     const generatedSignature = crypto
       .createHmac('sha256', secret)
       .update(razorpay_order_id + '|' + razorpay_payment_id)

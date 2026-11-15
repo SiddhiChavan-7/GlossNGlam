@@ -5,29 +5,34 @@ try {
   dns.setDefaultResultOrder('ipv4first')
 } catch {}
 
-const rawConnectionString = process.env.DATABASE_URL
+const globalForPool = global as unknown as { pgPool?: Pool }
 
-if (!rawConnectionString) {
-  throw new Error('DATABASE_URL environment variable is not set')
+export function getPool(): Pool {
+  if (!globalForPool.pgPool) {
+    const rawConnectionString = process.env.DATABASE_URL
+    if (!rawConnectionString) {
+      throw new Error('DATABASE_URL environment variable is not set')
+    }
+    const connectionString = rawConnectionString.replace(/[?&]channel_binding=[^&]+/, '')
+    globalForPool.pgPool = new Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 15000,
+    })
+  }
+  return globalForPool.pgPool
 }
 
-// Strip channel_binding=require if present, which causes timeouts with node-postgres
-const connectionString = rawConnectionString.replace(/[?&]channel_binding=[^&]+/, '')
-
-// Use a global pool to avoid re-creating connections on every hot reload in dev
-const globalForPool = global as unknown as { pgPool: Pool }
-
-export const pool = globalForPool.pgPool ?? new Pool({
-  connectionString,
-  ssl: { rejectUnauthorized: false },
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 15000,
+// Proxy object for backward compatibility with direct pool imports
+export const pool = new Proxy({} as Pool, {
+  get(target, prop, receiver) {
+    const actualPool = getPool()
+    const val = Reflect.get(actualPool, prop, receiver)
+    return typeof val === 'function' ? val.bind(actualPool) : val
+  }
 })
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPool.pgPool = pool
-}
 
 /** Helper: run a parameterised query and return rows */
 export async function query<T = Record<string, unknown>>(

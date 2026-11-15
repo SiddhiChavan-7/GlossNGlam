@@ -66,19 +66,20 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: finalTotal })
       })
-      const { orderId } = await res.json()
+      const data = await res.json()
+      if (!res.ok || !data.orderId) {
+        throw new Error(data.error || 'Failed to initialize payment')
+      }
+      const { orderId, keyId } = data
+      const razorpayKey = keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
 
-      // Load Razorpay script
-      const script = document.createElement('script')
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-      document.body.appendChild(script)
-      script.onload = () => {
+      const openRazorpayCheckout = () => {
         const rzp = new window.Razorpay({
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          key: razorpayKey,
           amount: finalTotal * 100,
           currency: 'INR',
           name: 'GlossNails',
-          description: 'Press-On Nail Set',
+          description: 'Handcrafted Luxury Press-On Nails',
           order_id: orderId,
           handler: async (response: any) => {
             try {
@@ -97,13 +98,16 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 })
               })
               
-              if (!verifyRes.ok) throw new Error('Payment verification failed')
+              if (!verifyRes.ok) {
+                const errData = await verifyRes.json()
+                throw new Error(errData.error || 'Payment verification failed')
+              }
               const { orderId: newOrderId } = await verifyRes.json()
 
               clearCart()
               window.location.href = `/order-success?id=${newOrderId}`
-            } catch (err) {
-              toast.error('Payment verification failed. If money was deducted, please contact support.')
+            } catch (err: any) {
+              toast.error(err.message || 'Payment verification failed. If money was deducted, please contact support.')
               setLoading(false)
             }
           },
@@ -113,8 +117,22 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         })
         rzp.open()
       }
-    } catch {
-      toast.error('Payment failed. Please try again.')
+
+      if (window.Razorpay) {
+        openRazorpayCheckout()
+      } else {
+        const script = document.createElement('script')
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+        script.async = true
+        script.onload = openRazorpayCheckout
+        script.onerror = () => {
+          toast.error('Failed to load payment gateway. Please check your internet connection.')
+          setLoading(false)
+        }
+        document.body.appendChild(script)
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Payment failed. Please try again.')
       setLoading(false)
     }
   }
