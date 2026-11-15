@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Instagram, Mail, ShieldCheck, Truck, Sparkles, Lock } from 'lucide-react'
+import { Instagram, Mail } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -10,27 +10,6 @@ export default function Footer() {
       <div className="absolute -top-24 -left-20 w-80 h-80 bg-pink-300/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-300/15 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-sky-300/20 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Sleek Minimal Trust Bar */}
-      <div className="relative z-10 border-b border-purple-100/60 bg-white/40 backdrop-blur-sm py-4 px-4">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-y-2 gap-x-6 md:gap-x-10 text-[11px] font-semibold text-gray-600 uppercase tracking-wider">
-          <span className="inline-flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-pink-500" /> Handcrafted Salon Gel
-          </span>
-          <span className="hidden sm:inline text-purple-200">•</span>
-          <span className="inline-flex items-center gap-1.5">
-            <Truck className="w-3.5 h-3.5 text-purple-500" /> Free Shipping Over ₹599
-          </span>
-          <span className="hidden sm:inline text-purple-200">•</span>
-          <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" /> Complimentary Prep Kit
-          </span>
-          <span className="hidden sm:inline text-purple-200">•</span>
-          <span className="inline-flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5 text-pink-500" /> Razorpay 256-Bit SSL
-          </span>
-        </div>
-      </div>
 
       {/* Main Minimal Footer Content */}
       <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 pt-12 pb-10">
