@@ -3,6 +3,15 @@ import crypto from 'crypto'
 import { queryOne, query } from '@/lib/db'
 import { sendOrderNotificationToAdmin } from '@/lib/email'
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function toValidUuid(val: any): string | null {
+  if (typeof val === 'string' && UUID_REGEX.test(val.trim())) {
+    return val.trim()
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -35,6 +44,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Insert Order
     const orderNote = `${form.order_note || ''}\n[Delivery: ${deliveryOption === 'local' ? 'Local Pickup / Delivery' : 'Regular Delivery'}]`.trim()
+    const validUserId = toValidUuid(userId)
 
     const order = await queryOne<{ id: string }>(
       `INSERT INTO orders
@@ -43,22 +53,33 @@ export async function POST(req: NextRequest) {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'paid', $12)
        RETURNING id`,
       [
-        form.customer_name, form.phone, form.email, form.instagram,
+        form.customer_name, form.phone, form.email || null, form.instagram || null,
         form.address, form.pincode, form.city, form.state,
-        orderNote, userId || null, finalTotal, razorpay_payment_id
+        orderNote, validUserId, finalTotal, razorpay_payment_id
       ]
     )
 
-    if (!order) throw new Error('Failed to create order')
+    if (!order) throw new Error('Failed to create order in database')
 
-    // 3. Insert Order Items
-    for (const item of items) {
-      await query(
-        `INSERT INTO order_items
-           (order_id, product_id, product_name, price, quantity, nail_shape, nail_size)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [order.id, item.product.id, item.product.name, item.product.price, item.quantity, item.nail_shape, item.nail_size]
-      )
+    // 3. Insert Order Items safely
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        const prodId = toValidUuid(item.product?.id)
+        await query(
+          `INSERT INTO order_items
+             (order_id, product_id, product_name, price, quantity, nail_shape, nail_size)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            order.id,
+            prodId,
+            item.product?.name || 'Handcrafted Nail Set',
+            item.product?.price || 0,
+            item.quantity || 1,
+            item.nail_shape || null,
+            item.nail_size || null
+          ]
+        )
+      }
     }
 
     // 4. Send Instant Admin Notification Email to glossnglam8@gmail.com
