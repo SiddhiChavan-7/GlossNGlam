@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query, queryOne } from '@/lib/db'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+
+    if (id) {
+      const order = await queryOne(
+        `SELECT o.*,
+                COALESCE(
+                  json_agg(oi.*) FILTER (WHERE oi.id IS NOT NULL),
+                  '[]'
+                ) AS order_items
+         FROM orders o
+         LEFT JOIN order_items oi ON oi.order_id = o.id
+         WHERE o.id = $1
+         GROUP BY o.id`,
+        [id]
+      )
+      if (!order) {
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      }
+      return NextResponse.json(order)
+    }
+
     const orders = await query(
       `SELECT o.*,
               COALESCE(

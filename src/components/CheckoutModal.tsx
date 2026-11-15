@@ -56,6 +56,16 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
     if (!form.customer_name || !form.phone || !form.address || !form.pincode || !form.city || !form.state) {
       toast.error('Please fill all required fields'); return
     }
+    const cleanPhone = form.phone.replace(/\D/g, '')
+    if (cleanPhone.length < 10) {
+      toast.error('Please enter a valid 10-digit mobile number')
+      return
+    }
+    const cleanPincode = form.pincode.replace(/\D/g, '')
+    if (cleanPincode.length !== 6) {
+      toast.error('Please enter a valid 6-digit pincode')
+      return
+    }
     if (items.length === 0) { toast.error('Your cart is empty'); return }
     setLoading(true)
 
@@ -275,15 +285,27 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 pb-28 text-sm font-medium">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">📦 Your Order</h3>
                   <div className="space-y-3 mb-4">
-                    {items.map(item => (
-                      <div key={item.product.id} className="flex justify-between items-center text-gray-600">
+                    {items.map((item, idx) => (
+                      <div key={`${item.product.id}-${item.nail_shape}-${item.nail_size}-${idx}`} className="flex justify-between items-center text-gray-600">
                         <div className="flex items-center gap-3">
-                          <Image src={item.product.image_url} alt="" width={32} height={32} className="rounded object-cover" />
-                          <span>{item.product.name} <span className="text-gray-400 ml-1">x {item.quantity}</span></span>
+                          {item.product.image_url ? (
+                            <Image src={item.product.image_url} alt="" width={36} height={36} className="w-9 h-9 rounded-lg object-cover border border-gray-100 shrink-0" />
+                          ) : (
+                            <div className="w-9 h-9 rounded-lg bg-gray-100 shrink-0" />
+                          )}
+                          <div>
+                            <p className="font-medium text-gray-900 leading-tight">
+                              {item.product.name} <span className="text-gray-400 font-normal">× {item.quantity}</span>
+                            </p>
+                            <p className="text-[11px] text-gray-400 capitalize">
+                              {item.nail_shape ? `${item.nail_shape} shape` : ''}
+                              {item.nail_size ? ` • Size ${item.nail_size}` : ''}
+                            </p>
+                          </div>
                         </div>
-                        <span className="text-gray-900 font-bold">
+                        <span className="text-gray-900 font-bold shrink-0">
                           {item.isFreeGift ? (
-                            <span className="text-brand uppercase">Free</span>
+                            <span className="text-brand uppercase text-xs">Free</span>
                           ) : (
                             `₹${(item.product.price * item.quantity).toLocaleString('en-IN')}`
                           )}
@@ -293,7 +315,13 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                     
                     <div className="flex justify-between pt-3 border-t border-gray-50 text-gray-500">
                       <span>Shipping Fee</span>
-                      <span className="text-gray-900 font-bold">₹{shippingFee}</span>
+                      <span className="font-bold">
+                        {shippingFee === 0 ? (
+                          <span className="text-emerald-600 font-semibold uppercase text-xs tracking-wider">Free</span>
+                        ) : (
+                          <span className="text-gray-900">₹{shippingFee}</span>
+                        )}
+                      </span>
                     </div>
 
                     {discount > 0 && (
