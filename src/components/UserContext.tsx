@@ -1,12 +1,6 @@
 'use client'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-
-type User = {
-  id: string
-  name: string
-  email: string
-  has_claimed_giveaway: boolean
-}
+import { User } from '@/lib/types'
 
 type AuthContextType = {
   user: User | null

@@ -20,6 +20,7 @@ create table if not exists users (
   email text not null unique,
   password_hash text not null,
   has_claimed_giveaway boolean default false,
+  saved_sizes jsonb default null,
   created_at timestamptz not null default now()
 );
 

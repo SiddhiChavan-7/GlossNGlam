@@ -62,3 +62,24 @@ export interface PromoCode {
   discount_percent: number
   is_active: boolean
 }
+
+export interface SavedSizingProfile {
+  preset?: string
+  preferred_shape?: string
+  preferred_length?: string
+  thumb?: number
+  index?: number
+  middle?: number
+  ring?: number
+  pinky?: number
+  notes?: string
+}
+
+export interface User {
+  id: string
+  name: string
+  email: string
+  has_claimed_giveaway?: boolean
+  saved_sizes?: SavedSizingProfile | null
+  created_at?: string
+}

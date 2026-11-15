@@ -11,8 +11,8 @@ export async function GET() {
       return NextResponse.json({ user: null }, { status: 401 })
     }
 
-    const user = await queryOne<{ id: string; name: string; email: string; has_claimed_giveaway: boolean }>(
-      `SELECT id, name, email, has_claimed_giveaway FROM users WHERE id = $1`,
+    const user = await queryOne<{ id: string; name: string; email: string; has_claimed_giveaway: boolean; saved_sizes: any }>(
+      `SELECT id, name, email, has_claimed_giveaway, saved_sizes FROM users WHERE id = $1`,
       [userId]
     )
 

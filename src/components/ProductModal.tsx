@@ -1,10 +1,13 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
+import { useAuth } from '@/components/UserContext'
 import toast from 'react-hot-toast'
-import { Share2, X, Instagram, Camera } from 'lucide-react'
+import { Share2, X, Instagram, Camera, Sparkles, Ruler } from 'lucide-react'
 import SizingGuideModal from '@/components/SizingGuideModal'
+import NailShapeVisualizer, { NailLengthType } from '@/components/NailShapeVisualizer'
 import { Product } from '@/lib/types'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -18,9 +21,11 @@ interface ProductModalProps {
 
 export default function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
   const { addToCart } = useCart()
+  const { user } = useAuth()
   const [selectedShape, setSelectedShape] = useState('')
   const [selectedSize, setSelectedSize] = useState('')
   const [isSizingModalOpen, setIsSizingModalOpen] = useState(false)
+  const [isVisualizerOpen, setIsVisualizerOpen] = useState(false)
 
   // Reset state when product opens
   useEffect(() => {
@@ -120,13 +125,23 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                 {/* Nail shape selector */}
                 {product.nail_shapes?.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-2 border-t pt-6">Nail Shape</p>
+                    <div className="flex items-center justify-between mb-2.5 border-t border-gray-100 pt-6">
+                      <p className="text-sm font-semibold text-gray-900">Nail Shape</p>
+                      <button
+                        type="button"
+                        onClick={() => setIsVisualizerOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-50 hover:bg-pink-100 border border-brand/25 text-brand text-xs font-semibold transition-all shadow-xs"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 fill-brand text-brand" />
+                        <span>Try on Virtual Hand</span>
+                      </button>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {product.nail_shapes.map((shape: string) => (
                         <button
                           key={shape}
                           onClick={() => setSelectedShape(shape)}
-                          className={`px-4 py-2 rounded-full text-sm transition-all capitalize border ${selectedShape === shape ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                          className={`px-4 py-2 rounded-full text-sm transition-all capitalize border ${selectedShape === shape ? 'bg-gray-900 text-white border-gray-900 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-gray-400'
                             }`}
                         >
                           {shape}
@@ -139,7 +154,29 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                 {/* Size selector */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-gray-900">Nail Size</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-gray-900">Nail Size</p>
+                      {user?.saved_sizes?.preset && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const p = user.saved_sizes?.preset
+                            if (p) {
+                              setSelectedSize(p)
+                              if (user.saved_sizes?.preferred_shape && product.nail_shapes?.includes(user.saved_sizes.preferred_shape)) {
+                                setSelectedShape(user.saved_sizes.preferred_shape)
+                              }
+                              toast.success(`Applied your saved profile size (${p})! ✨`)
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-[11px] font-semibold transition-all"
+                          title="Click to apply your saved size"
+                        >
+                          <Ruler className="w-3 h-3 text-purple-600" />
+                          <span>Apply Saved ({user.saved_sizes.preset})</span>
+                        </button>
+                      )}
+                    </div>
                     <button
                       onClick={() => setIsSizingModalOpen(true)}
                       className="text-xs text-brand font-medium hover:underline flex items-center gap-1"
@@ -153,7 +190,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                       <button
                         key={size}
                         onClick={() => setSelectedSize(size)}
-                        className={`w-12 h-12 flex-shrink-0 rounded-xl text-sm font-medium border transition-all ${selectedSize === size ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                        className={`w-12 h-12 flex-shrink-0 rounded-xl text-sm font-medium border transition-all ${selectedSize === size ? 'bg-gray-900 text-white border-gray-900 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-gray-400'
                           }`}
                       >
                         {size}
@@ -207,6 +244,16 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
         </div>
       )}
       <SizingGuideModal isOpen={isSizingModalOpen} onClose={() => setIsSizingModalOpen(false)} />
+      <NailShapeVisualizer
+        isOpen={isVisualizerOpen}
+        onClose={() => setIsVisualizerOpen(false)}
+        initialShape={selectedShape}
+        productName={product?.name}
+        onApply={(shape: string, length: NailLengthType) => {
+          setSelectedShape(shape)
+          toast.success(`Selected ${shape} shape (${length})! 💅`)
+        }}
+      />
     </AnimatePresence>
   )
 }
