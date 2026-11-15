@@ -59,6 +59,7 @@ export default function Navbar({
                     src="/founder.jpg"
                     alt="Gloss & Glam"
                     fill
+                    unoptimized
                     priority
                     className="object-cover object-top"
                   />
@@ -86,6 +87,7 @@ export default function Navbar({
                     src="/founder.jpg"
                     alt="Gloss & Glam"
                     fill
+                    unoptimized
                     priority
                     className="object-cover object-top"
                   />
