@@ -1,10 +1,12 @@
 'use client'
 import Link from 'next/link'
-import { ShoppingBag, Menu, X, User, Heart } from 'lucide-react'
+import Image from 'next/image'
+import { ShoppingBag, Menu, X, User, Heart, Sparkles } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { useAuth } from '@/components/UserContext'
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Navbar({
   onCartClick,
@@ -17,13 +19,60 @@ export default function Navbar({
   const { totalWishlist } = useWishlist()
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isLogoHovered, setIsLogoHovered] = useState(false)
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
-        <Link href="/" className="text-2xl font-bold text-brand tracking-wide">
-          Gloss<span className="italic font-light">Nails</span>
-        </Link>
+        {/* Brand Logo with Founder Hover Popover */}
+        <div
+          className="relative group py-2"
+          onMouseEnter={() => setIsLogoHovered(true)}
+          onMouseLeave={() => setIsLogoHovered(false)}
+        >
+          <Link href="/" className="text-2xl font-bold text-brand tracking-wide inline-flex items-center gap-1.5">
+            <span>Gloss<span className="italic font-light">Nails</span></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-pink-400 group-hover:scale-125 transition-transform" />
+          </Link>
+
+          {/* Floating Founder Studio Hover Card */}
+          <AnimatePresence>
+            {isLogoHovered && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="hidden md:block absolute top-full left-0 mt-2 z-50 pointer-events-none"
+              >
+                <div className="w-60 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 shadow-2xl border border-pink-200/80 ring-1 ring-black/5 overflow-hidden">
+                  {/* Photo Container */}
+                  <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden bg-pink-50">
+                    <Image
+                      src="/founder.jpg"
+                      alt="Founder & Nail Artist - Gloss & Glam"
+                      fill
+                      className="object-cover object-top"
+                    />
+                    {/* Top Badge */}
+                    <div className="absolute top-2 left-2 right-2 flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-semibold tracking-wide">
+                        <Sparkles className="w-3 h-3 text-pink-300" />
+                        <span>Handcrafted by Siddhi</span>
+                      </span>
+                    </div>
+
+                    {/* Bottom Gradient Overlay */}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-2.5 text-white">
+                      <p className="text-xs font-bold leading-tight">Gloss & Glam Studio</p>
+                      <p className="text-[10px] text-pink-200/90 leading-tight">Every set sculpted with love ✨</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Desktop links */}
         <div className="hidden md:flex gap-8 text-sm text-gray-600 font-medium">
