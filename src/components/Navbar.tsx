@@ -24,9 +24,9 @@ export default function Navbar({
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
-        {/* Brand Logo with Founder Hover Popover */}
+        {/* Brand Logo with Founder Hover Popover & Mobile Story Ring */}
         <div
-          className="relative group py-2"
+          className="relative group py-2 flex items-center gap-2.5"
           onMouseEnter={() => setIsLogoHovered(true)}
           onMouseLeave={() => setIsLogoHovered(false)}
         >
@@ -35,7 +35,30 @@ export default function Navbar({
             <span className="w-1.5 h-1.5 rounded-full bg-pink-400 group-hover:scale-125 transition-transform" />
           </Link>
 
-          {/* Floating Founder Studio Hover Card */}
+          {/* Luxury Mini Story Avatar (Tap on Mobile, Hover on Desktop) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsLogoHovered(!isLogoHovered)
+            }}
+            className="relative w-8 h-8 rounded-full p-0.5 bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 hover:scale-110 active:scale-95 transition-transform shrink-0 shadow-xs cursor-pointer focus:outline-none"
+            title="Meet the Artist (Tap to view)"
+            aria-label="Meet the Artist"
+          >
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-white">
+              <Image
+                src="/founder.jpg"
+                alt="Artist"
+                fill
+                className="object-cover object-top"
+              />
+            </div>
+            {/* Live pulse indicator dot */}
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+          </button>
+
+          {/* Desktop Hover Card */}
           <AnimatePresence>
             {isLogoHovered && (
               <motion.div
@@ -55,6 +78,42 @@ export default function Navbar({
                   />
                 </div>
               </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Mobile Tap Modal (Responsive for Phones) */}
+          <AnimatePresence>
+            {isLogoHovered && (
+              <div
+                className="md:hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs"
+                onClick={() => setIsLogoHovered(false)}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 260 }}
+                  className="relative aspect-[3/4] w-[82vw] max-w-[320px] rounded-2xl overflow-hidden shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Image
+                    src="/founder.jpg"
+                    alt="Gloss & Glam"
+                    fill
+                    priority
+                    className="object-cover object-top"
+                  />
+                  {/* Discreet Mobile Close Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsLogoHovered(false)}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 backdrop-blur-xs"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </div>
@@ -111,6 +170,25 @@ export default function Navbar({
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-4 text-sm font-medium text-gray-700">
+          {/* Mobile Artist Story Strip */}
+          <div
+            onClick={() => {
+              setMenuOpen(false)
+              setIsLogoHovered(true)
+            }}
+            className="flex items-center gap-3 p-2.5 rounded-2xl bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100 cursor-pointer active:scale-98 transition-transform"
+          >
+            <div className="relative w-10 h-10 rounded-full overflow-hidden p-0.5 bg-gradient-to-tr from-pink-500 to-purple-500 shrink-0">
+              <div className="relative w-full h-full rounded-full overflow-hidden">
+                <Image src="/founder.jpg" alt="Artist" fill className="object-cover object-top" />
+              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-gray-900 leading-tight">Handcrafted by Siddhi ✨</p>
+              <p className="text-[11px] text-pink-600 font-medium">Tap to view studio & story →</p>
+            </div>
+          </div>
+
           <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link href="/catalog" onClick={() => setMenuOpen(false)} className="text-brand font-semibold">Full Catalog</Link>
           <Link href="/#shop-grid" onClick={() => setMenuOpen(false)}>Best Sellers</Link>
