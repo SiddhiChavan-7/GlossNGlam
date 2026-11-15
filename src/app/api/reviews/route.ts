@@ -7,6 +7,10 @@ export async function GET(req: NextRequest) {
     const productId = searchParams.get('productId')
 
     if (productId) {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId)
+      if (!isUUID) {
+        return NextResponse.json([])
+      }
       const reviews = await query(
         `SELECT * FROM product_reviews 
          WHERE product_id = $1 
