@@ -5,6 +5,7 @@ import AdminSidebar from '@/components/AdminSidebar'
 import { Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
+import { compressImage } from '@/lib/compressImage'
 
 export default function AdminCatalogPage() {
   const router = useRouter()
@@ -29,15 +30,29 @@ export default function AdminCatalogPage() {
   }, [router])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const rawFile = e.target.files?.[0]
+    if (!rawFile) return
     setUploading(true)
 
     try {
+      // Compress image client-side to prevent Vercel 4.5MB payload limit errors
+      const file = await compressImage(rawFile)
+
       const fd = new FormData()
       fd.append('file', file)
       const res = await fetch('/api/upload', { method: 'POST', body: fd })
-      const data = await res.json()
+      
+      let data: any
+      try {
+        data = await res.json()
+      } catch {
+        const text = await res.text().catch(() => '')
+        throw new Error(
+          res.status === 413
+            ? 'Catalog image too large for server.'
+            : `Upload failed (Status ${res.status}): ${text.slice(0, 100) || res.statusText}`
+        )
+      }
 
       if (!res.ok) throw new Error(data.error || 'Upload failed')
 
@@ -55,9 +70,11 @@ export default function AdminCatalogPage() {
       setCatalogUrl(uploadedUrl)
       toast.success('Catalog updated successfully!')
     } catch (err: any) {
-      toast.error(err.message || 'Catalog upload failed.')
+      console.error('Catalog upload error:', err)
+      toast.error(err.message || 'Catalog upload failed.', { duration: 6000 })
     } finally {
       setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
     }
   }
 
@@ -76,9 +93,11 @@ export default function AdminCatalogPage() {
             Customers will see this image when selecting their custom color.
           </p>
 
-          <div
-            onClick={() => fileRef.current?.click()}
-            className="border-2 border-dashed border-gray-700 rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer hover:border-brand transition-colors relative overflow-hidden group"
+          <label
+            htmlFor="catalog-image-upload"
+            className={`border-2 border-dashed border-gray-700 rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer hover:border-brand transition-colors relative overflow-hidden group select-none ${
+              uploading ? 'opacity-60 cursor-not-allowed pointer-events-none' : ''
+            }`}
           >
             {catalogUrl && !uploading ? (
               <>
@@ -92,11 +111,19 @@ export default function AdminCatalogPage() {
             ) : (
               <>
                 <Upload className="w-8 h-8 text-gray-500 mb-3" />
-                <span className="text-sm text-gray-400">{uploading ? 'Uploading to Cloudinary...' : 'Click to upload catalog image'}</span>
+                <span className="text-sm text-gray-400">{uploading ? 'Optimizing & uploading to Cloudinary...' : 'Click or tap to upload catalog image'}</span>
               </>
             )}
-          </div>
-          <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            <input
+              id="catalog-image-upload"
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              disabled={uploading}
+              onChange={handleImageUpload}
+              className="sr-only"
+            />
+          </label>
 
           <div className="mt-6 bg-brand/10 border border-brand/20 p-4 rounded-xl flex items-start gap-3">
             <div className="text-brand text-xl">✨</div>

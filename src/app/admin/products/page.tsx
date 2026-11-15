@@ -8,6 +8,7 @@ import { COLOR_FAMILIES } from '@/lib/colors'
 import { Plus, Pencil, Trash2, X, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
+import { compressImage } from '@/lib/compressImage'
 
 const SHAPES = ['almond', 'stiletto', 'coffin', 'square', 'round', 'oval']
 const emptyForm = {
@@ -122,23 +123,41 @@ export default function AdminProductsPage() {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+    const rawFiles = e.target.files
+    if (!rawFiles || rawFiles.length === 0) return
     setUploading(true)
 
     const urls: string[] = []
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        setUploadProgress(`Uploading ${i + 1} of ${files.length}...`)
-        const file = files[i]
+      for (let i = 0; i < rawFiles.length; i++) {
+        setUploadProgress(`Optimizing ${i + 1} of ${rawFiles.length}...`)
+        const rawFile = rawFiles[i]
+
+        // Compress image client-side to prevent Vercel 4.5MB payload limit errors
+        const file = await compressImage(rawFile)
+
+        setUploadProgress(`Uploading ${i + 1} of ${rawFiles.length}...`)
         const fd = new FormData()
         fd.append('file', file)
 
         const res = await fetch('/api/upload', { method: 'POST', body: fd })
-        const data = await res.json()
+        
+        let data: any
+        try {
+          data = await res.json()
+        } catch {
+          const text = await res.text().catch(() => '')
+          throw new Error(
+            res.status === 413
+              ? 'Image file too large for server. Please select a smaller photo.'
+              : `Upload failed (Status ${res.status}): ${text.slice(0, 100) || res.statusText}`
+          )
+        }
 
-        if (!res.ok) throw new Error(data.error || 'Upload failed')
+        if (!res.ok) {
+          throw new Error(data.error || 'Upload failed')
+        }
         urls.push(data.url)
       }
 
@@ -154,7 +173,8 @@ export default function AdminProductsPage() {
         toast.success(`${urls.length} image${urls.length > 1 ? 's' : ''} uploaded!`)
       }
     } catch (err: any) {
-      toast.error(err.message || 'Image upload failed.')
+      console.error('Image upload failed:', err)
+      toast.error(err.message || 'Image upload failed.', { duration: 6000 })
     } finally {
       setUploading(false)
       setUploadProgress('')
@@ -405,22 +425,32 @@ export default function AdminProductsPage() {
                         </div>
                       )
                     })}
-                    <div
-                      onClick={() => !uploading && fileRef.current?.click()}
-                      className={`w-24 h-24 border-2 border-dashed border-gray-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand transition-colors relative ${uploading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    <label
+                      htmlFor="product-photo-upload"
+                      className={`w-24 h-24 border-2 border-dashed border-gray-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand transition-colors relative select-none ${
+                        uploading ? 'opacity-60 cursor-not-allowed pointer-events-none' : ''
+                      }`}
                     >
                       <Upload className={`w-5 h-5 mb-1 ${uploading ? 'text-brand animate-pulse' : 'text-gray-500'}`} />
-                      <span className="text-[10px] text-gray-500 text-center px-1 font-medium">
+                      <span className="text-[10px] text-gray-400 text-center px-1 font-medium">
                         {uploading ? (uploadProgress || 'Uploading...') : '+ Add Photos'}
                       </span>
-                    </div>
+                      <input
+                        id="product-photo-upload"
+                        ref={fileRef}
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        disabled={uploading}
+                        onChange={handleImageUpload}
+                        className="sr-only"
+                      />
+                    </label>
                   </div>
 
                   {uploadProgress && (
                     <p className="text-xs text-brand animate-pulse mb-2">{uploadProgress}</p>
                   )}
-
-                  <input ref={fileRef} type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </div>
 
                 {[

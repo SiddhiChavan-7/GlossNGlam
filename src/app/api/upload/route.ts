@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
     if (!cloudName || !apiKey || !apiSecret) {
       console.error('Missing Cloudinary creds:', { cloudName: !!cloudName, apiKey: !!apiKey, apiSecret: !!apiSecret })
       return NextResponse.json(
-        { error: `Cloudinary credentials not configured. Missing: ${!cloudName ? 'CLOUD_NAME ' : ''}${!apiKey ? 'API_KEY ' : ''}${!apiSecret ? 'API_SECRET' : ''}` },
+        {
+          error: `Cloudinary credentials not configured. Missing: ${!cloudName ? 'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ' : ''}${!apiKey ? 'CLOUDINARY_API_KEY ' : ''}${!apiSecret ? 'CLOUDINARY_API_SECRET' : ''}. If deployed on Vercel, please add these variables in Vercel Project Settings > Environment Variables.`
+        },
         { status: 500 }
       )
     }
@@ -56,12 +58,21 @@ export async function POST(req: NextRequest) {
       }
     )
 
-    const uploadData = await uploadRes.json()
+    let uploadData: any
+    try {
+      uploadData = await uploadRes.json()
+    } catch {
+      const errText = await uploadRes.text().catch(() => '')
+      return NextResponse.json(
+        { error: `Cloudinary response error (${uploadRes.status}): ${errText.slice(0, 150) || uploadRes.statusText}` },
+        { status: uploadRes.status || 500 }
+      )
+    }
 
     if (!uploadRes.ok) {
       console.error('Cloudinary upload error:', uploadData)
       return NextResponse.json(
-        { error: uploadData.error?.message || 'Upload to Cloudinary failed' },
+        { error: uploadData?.error?.message || 'Upload to Cloudinary failed' },
         { status: uploadRes.status || 500 }
       )
     }
