@@ -6,6 +6,9 @@ try {
   dns.setDefaultResultOrder('ipv4first')
 } catch {}
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 // Server-side Cloudinary upload endpoint
 // Accepts multipart/form-data with a 'file' field
 export async function POST(req: NextRequest) {
