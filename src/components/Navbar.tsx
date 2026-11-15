@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Menu, X, User, Heart, Sparkles } from 'lucide-react'
+import { ShoppingBag, Menu, X, User, Heart } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { useAuth } from '@/components/UserContext'
@@ -43,31 +43,16 @@ export default function Navbar({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 6, scale: 0.95 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="hidden md:block absolute top-full left-0 mt-2 z-50 pointer-events-none"
+                className="hidden md:block absolute top-full left-0 mt-3 z-50 pointer-events-none"
               >
-                <div className="w-60 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 shadow-2xl border border-pink-200/80 ring-1 ring-black/5 overflow-hidden">
-                  {/* Photo Container */}
-                  <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden bg-pink-50">
-                    <Image
-                      src="/founder.jpg"
-                      alt="Founder & Nail Artist - Gloss & Glam"
-                      fill
-                      className="object-cover object-top"
-                    />
-                    {/* Top Badge */}
-                    <div className="absolute top-2 left-2 right-2 flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-semibold tracking-wide">
-                        <Sparkles className="w-3 h-3 text-pink-300" />
-                        <span>Handcrafted by Siddhi</span>
-                      </span>
-                    </div>
-
-                    {/* Bottom Gradient Overlay */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-2.5 text-white">
-                      <p className="text-xs font-bold leading-tight">Gloss & Glam Studio</p>
-                      <p className="text-[10px] text-pink-200/90 leading-tight">Every set sculpted with love ✨</p>
-                    </div>
-                  </div>
+                <div className="relative aspect-[3/4] w-72 md:w-80 rounded-2xl overflow-hidden shadow-2xl bg-black/5">
+                  <Image
+                    src="/founder.jpg"
+                    alt="Gloss & Glam"
+                    fill
+                    priority
+                    className="object-cover object-top"
+                  />
                 </div>
               </motion.div>
             )}
