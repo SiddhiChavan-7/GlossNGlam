@@ -51,7 +51,7 @@ export default function VIPInstagramCard() {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-        className="relative w-full max-w-3xl bg-white rounded-[2.5rem] p-10 md:p-16 border border-gray-100 flex flex-col items-center text-center cursor-crosshair shadow-[0_30px_60px_rgba(224,17,95,0.08)]"
+        className="relative w-full max-w-3xl bg-white rounded-3xl md:rounded-[2.5rem] p-6 sm:p-10 md:p-16 border border-gray-100 flex flex-col items-center text-center cursor-crosshair shadow-[0_30px_60px_rgba(224,17,95,0.08)]"
       >
         {/* Dynamic Glass Glare Effect tracking cursor */}
         <motion.div 

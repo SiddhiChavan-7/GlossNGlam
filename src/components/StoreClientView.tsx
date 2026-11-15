@@ -81,13 +81,13 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand/5 blur-[100px] rounded-full point-events-none" />
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-light/20 blur-[100px] rounded-full point-events-none" />
           
-          <div className="max-w-6xl mx-auto px-4 py-20 md:py-32 flex flex-col items-center gap-12 relative z-10">
+          <div className="max-w-6xl mx-auto px-4 py-12 md:py-32 flex flex-col items-center gap-10 md:gap-12 relative z-10">
             <FadeIn direction="up" className="flex-1 text-center">
-              <span className="inline-block text-brand font-bold uppercase tracking-[0.2em] mb-4 text-xs">Exquisite Craftsmanship</span>
-              <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-[1.1] tracking-tight">
+              <span className="inline-block text-brand font-bold uppercase tracking-[0.2em] mb-3 text-xs">Exquisite Craftsmanship</span>
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-gray-900 leading-[1.1] tracking-tight">
                 Nails that <br /><span className="text-brand italic font-light">define luxury.</span>
               </h1>
-              <p className="mt-6 text-gray-500 font-medium text-lg max-w-md mx-auto">
+              <p className="mt-4 sm:mt-6 text-gray-500 font-medium text-sm sm:text-base md:text-lg max-w-md mx-auto">
                 Experience the ultimate in bespoke press-on nails. Handcrafted perfection for the modern woman.
               </p>
               <div className="mt-10 flex flex-wrap gap-4 justify-center">
@@ -182,7 +182,7 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
           </div>
 
           {/* Featured Grid */}
-          <StaggerContainer key={activeCategory} className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
+          <StaggerContainer key={activeCategory} className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 md:gap-6">
             {homeProducts.map(product => {
               const shapes = product.nail_shapes || []
               return (
@@ -200,14 +200,14 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
                       />
                       
                       {/* Top Badges */}
-                      <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                      <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 flex flex-col gap-1 sm:gap-1.5 z-10">
                         {!product.in_stock && (
-                          <span className="bg-red-500/90 backdrop-blur-md text-white text-[10px] uppercase font-bold px-2.5 py-1 rounded-full tracking-wider shadow-sm">
+                          <span className="bg-red-500/90 backdrop-blur-md text-white text-[9px] sm:text-[10px] uppercase font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full tracking-wider shadow-sm">
                             Sold Out
                           </span>
                         )}
                         {product.categories?.name && (
-                          <span className="bg-white/90 backdrop-blur-md text-gray-900 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full tracking-wider shadow-sm">
+                          <span className="bg-white/90 backdrop-blur-md text-gray-900 text-[9px] sm:text-[10px] uppercase font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full tracking-wider shadow-sm">
                             {product.categories.name}
                           </span>
                         )}
@@ -221,10 +221,10 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
                           toggleWishlist(product.id, product.name)
                         }}
                         aria-label="Save to Wishlist"
-                        className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-md group/heart border border-pink-100"
+                        className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-md group/heart border border-pink-100"
                       >
                         <Heart
-                          className={`w-4 h-4 transition-colors ${
+                          className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${
                             isWishlisted(product.id)
                               ? 'fill-rose-500 text-rose-500'
                               : 'text-gray-600 group-hover/heart:text-rose-500'
@@ -233,32 +233,32 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
                       </button>
                     </div>
 
-                    <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between">
                       <div>
-                        <h3 className="font-bold text-gray-900 leading-tight text-lg group-hover:text-brand transition-colors">
+                        <h3 className="font-bold text-gray-900 leading-tight text-sm sm:text-base md:text-lg group-hover:text-brand transition-colors line-clamp-1">
                           {product.name}
                         </h3>
 
                         {/* Available shapes */}
                         {shapes.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {shapes.slice(0, 3).map(shape => (
-                              <span key={shape} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md capitalize font-medium">
+                          <div className="flex flex-wrap gap-1 mt-1.5 sm:mt-2">
+                            {shapes.slice(0, 2).map(shape => (
+                              <span key={shape} className="text-[9px] sm:text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md capitalize font-medium">
                                 {shape}
                               </span>
                             ))}
-                            {shapes.length > 3 && (
-                              <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-md font-medium">
-                                +{shapes.length - 3}
+                            {shapes.length > 2 && (
+                              <span className="text-[9px] sm:text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-md font-medium">
+                                +{shapes.length - 2}
                               </span>
                             )}
                           </div>
                         )}
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                        <p className="font-bold text-brand text-xl">₹{product.price.toLocaleString('en-IN')}</p>
-                        <span className="text-xs font-semibold text-gray-700 bg-gray-50 group-hover:bg-brand group-hover:text-white px-3.5 py-1.5 rounded-xl border border-gray-200 group-hover:border-brand transition-colors">
+                      <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-gray-100 flex items-center justify-between gap-1">
+                        <p className="font-bold text-brand text-base sm:text-xl shrink-0">₹{product.price.toLocaleString('en-IN')}</p>
+                        <span className="text-[10px] sm:text-xs font-semibold text-gray-700 bg-gray-50 group-hover:bg-brand group-hover:text-white px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-xl border border-gray-200 group-hover:border-brand transition-colors shrink-0">
                           Customize →
                         </span>
                       </div>
