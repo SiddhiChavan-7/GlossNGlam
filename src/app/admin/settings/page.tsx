@@ -75,18 +75,18 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-950">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-950 font-sans">
       <AdminSidebar />
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <Settings className="w-8 h-8 text-white" />
-          <h1 className="text-2xl font-bold text-white">Store Settings</h1>
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden">
+        <div className="flex items-center gap-3 mb-6 sm:mb-8">
+          <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Store Settings</h1>
         </div>
 
         {loading ? (
           <div className="text-white">Loading...</div>
         ) : (
-          <div className="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-xl max-w-2xl">
+          <div className="bg-gray-900 p-5 sm:p-8 rounded-2xl border border-gray-800 shadow-xl max-w-2xl">
             <h2 className="text-xl font-semibold text-white mb-6">Threshold Free Gift Offer</h2>
             <p className="text-gray-400 text-sm mb-6">Create a special promotion where users receive a free nail set when their cart total reaches a specific amount.</p>
             

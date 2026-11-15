@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 
 export default function AdminLoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -75,15 +77,36 @@ export default function AdminLoginPage() {
             />
           </div>
           <div>
-            <label className="text-xs text-gray-400 font-medium mb-1.5 block">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 bg-gray-800 text-white rounded-xl text-sm border border-gray-700 focus:outline-none focus:border-brand transition-colors placeholder-gray-600"
-              required
-            />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs text-gray-400 font-medium block">Password</label>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-xs text-brand hover:text-brand/80 transition-colors inline-flex items-center gap-1 font-medium"
+              >
+                {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span>{showPassword ? 'Hide' : 'View password'}</span>
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full pl-4 pr-11 py-3 bg-gray-800 text-white rounded-xl text-sm border border-gray-700 focus:outline-none focus:border-brand transition-colors placeholder-gray-600 font-mono tracking-wider"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-700/60 transition-colors"
+                title={showPassword ? 'Hide password' : 'View password'}
+                aria-label={showPassword ? 'Hide password' : 'View password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4 text-brand" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"

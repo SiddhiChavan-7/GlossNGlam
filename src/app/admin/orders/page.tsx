@@ -89,19 +89,19 @@ export default function AdminOrders() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-950 font-sans">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-950 font-sans">
       <AdminSidebar />
-      <main className="flex-1 p-6 md:p-8 overflow-auto relative">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <Package className="w-6 h-6 text-brand" />
+            <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5 sm:gap-3">
+              <Package className="w-5 h-5 sm:w-6 sm:h-6 text-brand" />
               Order Management
             </h1>
             <p className="text-xs text-gray-400 mt-1">Live customer orders streamed from database</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
             {/* Live Indicator */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-800/80 text-emerald-400 text-xs font-semibold">
               <span className="relative flex h-2 w-2">
@@ -109,12 +109,12 @@ export default function AdminOrders() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span>Live Sync</span>
-              {lastSyncTime && <span className="text-[10px] text-emerald-600 font-mono">({lastSyncTime})</span>}
+              {lastSyncTime && <span className="text-[10px] text-emerald-600 font-mono hidden sm:inline">({lastSyncTime})</span>}
             </div>
 
             <button 
               onClick={() => { fetchOrders(); toast.success('Orders refreshed!') }}
-              className="flex items-center gap-2 px-3.5 py-1.5 bg-gray-900 border border-gray-800 rounded-xl text-xs font-medium text-gray-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 bg-gray-900 border border-gray-800 rounded-xl text-xs font-medium text-gray-300 hover:text-white transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Refresh
             </button>
@@ -122,29 +122,29 @@ export default function AdminOrders() {
         </div>
 
         <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden shadow-xl flex flex-col min-h-[500px]">
-          <div className="p-5 border-b border-gray-800 flex justify-between items-center">
-            <div className="relative w-64">
+          <div className="p-4 sm:p-5 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="relative w-full sm:w-72">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input 
                 type="text"
-                placeholder="Search orders..."
+                placeholder="Search orders or customer..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-gray-950 border border-gray-800 text-white text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-brand"
+                className="w-full bg-gray-950 border border-gray-800 text-white text-xs sm:text-sm rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-brand placeholder-gray-500"
               />
             </div>
-            <div className="text-sm text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-400">
               Total {filteredOrders.length} orders
             </div>
           </div>
           
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-x-auto flex-1 -mx-4 sm:mx-0 px-4 sm:px-0">
             {loading ? (
               <div className="flex items-center justify-center h-64 text-brand">
                 <RefreshCw className="w-8 h-8 animate-spin" />
               </div>
             ) : (
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="border-b border-gray-800">
                     <th className="text-left px-5 py-3 text-gray-400 text-xs font-medium">Order ID</th>
@@ -205,7 +205,7 @@ export default function AdminOrders() {
 
       {/* Details Side Panel */}
       {selectedOrder && (
-        <div className="fixed inset-y-0 right-0 w-[450px] bg-gray-900 border-l border-gray-800 shadow-2xl flex flex-col z-50 animate-in slide-in-from-right-full">
+        <div className="fixed inset-y-0 right-0 w-full sm:w-[450px] max-w-full bg-gray-900 border-l border-gray-800 shadow-2xl flex flex-col z-50 animate-in slide-in-from-right-full">
           <div className="p-6 border-b border-gray-800 flex justify-between items-center">
             <div>
               <h2 className="text-white font-bold text-xl">Order #{selectedOrder.id.slice(0,8).toUpperCase()}</h2>

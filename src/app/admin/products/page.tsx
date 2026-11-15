@@ -249,13 +249,16 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-950">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-950">
       <AdminSidebar />
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-white">Products</h1>
-          <button onClick={openAdd} className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
-            <Plus className="w-4 h-4" /> Add Product
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden">
+        <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">Products & Inventory</h1>
+            <p className="text-xs text-gray-400 mt-0.5">Manage catalog pricing, stock & photos</p>
+          </div>
+          <button onClick={openAdd} className="flex items-center gap-1.5 sm:gap-2 bg-brand text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity shrink-0">
+            <Plus className="w-4 h-4" /> <span>Add Product</span>
           </button>
         </div>
 

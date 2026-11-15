@@ -62,14 +62,14 @@ export default function AdminCatalogPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-950">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-950">
       <AdminSidebar />
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-white">Giveaway Settings & Catalog</h1>
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Giveaway Settings & Catalog</h1>
         </div>
 
-        <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8 max-w-2xl">
+        <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5 sm:p-8 max-w-2xl">
           <h2 className="text-lg font-semibold text-white mb-2">Signature Solids Catalog</h2>
           <p className="text-sm text-gray-400 mb-6">
             Upload the reference image showing the available solid colors for the free gift. 

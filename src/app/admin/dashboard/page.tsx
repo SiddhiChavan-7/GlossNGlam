@@ -100,34 +100,34 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="flex min-h-screen bg-gray-950 font-sans">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-950 font-sans">
       <AdminSidebar />
-      <main className="flex-1 p-6 md:p-8 overflow-auto">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden">
         {/* Top Realtime Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Admin Dashboard</h1>
-            <p className="text-xs text-gray-400 mt-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Admin Dashboard</h1>
+            <p className="text-xs text-gray-400 mt-0.5 sm:mt-1">
               Live database connection • Real-time orders & revenue
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
             {/* Live Indicator */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-800/80 text-emerald-400 text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-800/80 text-emerald-400 text-xs font-semibold">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span>Live Sync Active</span>
-              {lastSyncTime && <span className="text-[10px] text-emerald-600/90 font-mono">({lastSyncTime})</span>}
+              {lastSyncTime && <span className="text-[10px] text-emerald-600/90 font-mono hidden sm:inline">({lastSyncTime})</span>}
             </div>
 
             {/* Sync Now Button */}
             <button
               onClick={() => fetchLiveStats(true)}
               disabled={isSyncing}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-xs font-medium text-gray-300 hover:text-white hover:border-gray-700 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-xs font-medium text-gray-300 hover:text-white hover:border-gray-700 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-brand' : ''}`} />
               <span>Sync Now</span>
@@ -137,17 +137,17 @@ export default function AdminDashboard() {
 
         {/* Real-time Stat Cards */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-28 bg-gray-900/60 border border-gray-800/60 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {statCards.map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="bg-gray-900 rounded-2xl p-5 border border-gray-800/80 shadow-md">
-                <Icon className={`w-6 h-6 ${color} mb-3`} />
-                <p className="text-2xl font-bold text-white tracking-tight">{value}</p>
+              <div key={label} className="bg-gray-900 rounded-2xl p-4 sm:p-5 border border-gray-800/80 shadow-md">
+                <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${color} mb-2.5 sm:mb-3`} />
+                <p className="text-xl sm:text-2xl font-bold text-white tracking-tight">{value}</p>
                 <p className="text-xs text-gray-400 mt-1">{label}</p>
               </div>
             ))}
@@ -201,8 +201,8 @@ export default function AdminDashboard() {
             </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <table className="w-full text-sm min-w-[680px]">
               <thead>
                 <tr className="border-b border-gray-800 text-gray-400 text-xs font-semibold uppercase tracking-wider bg-gray-950/50">
                   <th className="text-left px-5 py-3.5">Order ID</th>
