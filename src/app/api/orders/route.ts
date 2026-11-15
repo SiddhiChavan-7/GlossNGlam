@@ -54,3 +54,18 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) {
+      return NextResponse.json({ error: 'Missing order id' }, { status: 400 })
+    }
+    await query(`DELETE FROM order_items WHERE order_id = $1`, [id])
+    await query(`DELETE FROM orders WHERE id = $1`, [id])
+    return NextResponse.json({ success: true, deletedId: id })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}

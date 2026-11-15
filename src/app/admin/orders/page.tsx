@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 
 
-import { Package, Search, ExternalLink, RefreshCw, Truck } from 'lucide-react'
+import { Package, Search, ExternalLink, RefreshCw, Truck, Trash2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function AdminOrders() {
   const router = useRouter()
@@ -17,23 +18,47 @@ export default function AdminOrders() {
   
   // Updating state
   const [updating, setUpdating] = useState(false)
+  const [lastSyncTime, setLastSyncTime] = useState('')
 
-  const fetchOrders = async () => {
-    setLoading(true)
+  const fetchOrders = async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
-      const res = await fetch('/api/orders')
+      const res = await fetch('/api/orders', { cache: 'no-store' })
       const data = await res.json()
       setOrders(Array.isArray(data) ? data : [])
+      setLastSyncTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
     } catch {
-      setOrders([])
+      if (!silent) setOrders([])
+    } finally {
+      if (!silent) setLoading(false)
     }
-    setLoading(false)
   }
 
   useEffect(() => {
     if (!localStorage.getItem('admin-auth')) { router.push('/admin/login'); return }
     fetchOrders()
+    const interval = setInterval(() => {
+      fetchOrders(true)
+    }, 5000)
+    return () => clearInterval(interval)
   }, [router])
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this order?')) return
+    try {
+      const res = await fetch(`/api/orders?id=${orderId}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        toast.success('Order deleted successfully')
+        if (selectedOrder?.id === orderId) setSelectedOrder(null)
+        fetchOrders()
+      } else {
+        toast.error(data.error || 'Failed to delete order')
+      }
+    } catch {
+      toast.error('Failed to delete order')
+    }
+  }
 
   const filteredOrders = orders.filter(o => 
     o.id.toLowerCase().includes(search.toLowerCase()) || 
@@ -51,31 +76,49 @@ export default function AdminOrders() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      await fetchOrders()
+      await fetchOrders(true)
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, fulfillment_status: status, tracking_number: trackingNumber ?? selectedOrder.tracking_number })
       }
+      toast.success('Order status updated!')
     } catch (e) {
       console.error(e)
+      toast.error('Failed to update status')
     }
     setUpdating(false)
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-950">
+    <div className="flex min-h-screen bg-gray-950 font-sans">
       <AdminSidebar />
-      <main className="flex-1 p-8 overflow-auto relative">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Package className="w-6 h-6 text-brand" />
-            Order Management
-          </h1>
-          <button 
-            onClick={fetchOrders}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-300 hover:text-white transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" /> Refresh
-          </button>
+      <main className="flex-1 p-6 md:p-8 overflow-auto relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              <Package className="w-6 h-6 text-brand" />
+              Order Management
+            </h1>
+            <p className="text-xs text-gray-400 mt-1">Live customer orders streamed from database</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Live Indicator */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-800/80 text-emerald-400 text-xs font-semibold">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Live Sync</span>
+              {lastSyncTime && <span className="text-[10px] text-emerald-600 font-mono">({lastSyncTime})</span>}
+            </div>
+
+            <button 
+              onClick={() => { fetchOrders(); toast.success('Orders refreshed!') }}
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-gray-900 border border-gray-800 rounded-xl text-xs font-medium text-gray-300 hover:text-white transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh
+            </button>
+          </div>
         </div>
 
         <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden shadow-xl flex flex-col min-h-[500px]">
@@ -249,6 +292,17 @@ export default function AdminOrders() {
                 </div>
 
               </div>
+            </section>
+
+            {/* Danger Zone: Delete Order */}
+            <section className="pt-4 border-t border-gray-800/80">
+              <button
+                onClick={() => handleDeleteOrder(selectedOrder.id)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-red-950/40 border border-red-900/60 text-red-400 hover:bg-red-900/50 hover:text-red-300 font-medium text-xs transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Permanently Delete Order
+              </button>
             </section>
             
           </div>
