@@ -1,12 +1,20 @@
 'use client'
 import Link from 'next/link'
-import { ShoppingBag, Menu, X, User } from 'lucide-react'
+import { ShoppingBag, Menu, X, User, Heart } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { useWishlist } from '@/context/WishlistContext'
 import { useAuth } from '@/components/UserContext'
 import { useState } from 'react'
 
-export default function Navbar({ onCartClick }: { onCartClick?: () => void }) {
+export default function Navbar({
+  onCartClick,
+  onWishlistClick
+}: {
+  onCartClick?: () => void
+  onWishlistClick?: () => void
+}) {
   const { totalItems } = useCart()
+  const { totalWishlist } = useWishlist()
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -37,6 +45,21 @@ export default function Navbar({ onCartClick }: { onCartClick?: () => void }) {
             </Link>
           )}
           
+          {/* Wishlist Button */}
+          <button
+            onClick={() => onWishlistClick && onWishlistClick()}
+            className="relative text-gray-700 hover:text-brand transition-colors p-1"
+            title="My Wishlist"
+            aria-label="Wishlist"
+          >
+            <Heart className={`w-5 h-5 ${totalWishlist > 0 ? 'fill-brand text-brand' : ''}`} />
+            {totalWishlist > 0 && (
+              <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                {totalWishlist}
+              </span>
+            )}
+          </button>
+
           <button onClick={() => onCartClick && onCartClick()} className="relative text-gray-800">
             <ShoppingBag className="w-6 h-6 hover:text-brand transition-colors" />
             {totalItems > 0 && (
@@ -57,6 +80,18 @@ export default function Navbar({ onCartClick }: { onCartClick?: () => void }) {
           <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link href="/catalog" onClick={() => setMenuOpen(false)} className="text-brand font-semibold">Full Catalog</Link>
           <Link href="/#shop-grid" onClick={() => setMenuOpen(false)}>Best Sellers</Link>
+          <button
+            onClick={() => {
+              setMenuOpen(false)
+              onWishlistClick && onWishlistClick()
+            }}
+            className="text-left py-1 text-gray-700 flex items-center justify-between"
+          >
+            <span>Wishlist</span>
+            <span className="text-xs bg-pink-100 text-brand px-2 py-0.5 rounded-full font-bold">
+              {totalWishlist}
+            </span>
+          </button>
           {user && <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="text-brand">My Dashboard</Link>}
           <button onClick={() => { setMenuOpen(false); onCartClick && onCartClick(); }} className="text-left py-2 border-b border-gray-50">Cart ({totalItems})</button>
         </div>

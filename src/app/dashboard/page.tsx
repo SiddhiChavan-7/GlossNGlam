@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import SizingGuideModal from '@/components/SizingGuideModal'
-import { Ruler, Sparkles, Check, Camera, ShoppingBag, LogOut, Package, ArrowRight } from 'lucide-react'
+import InvoiceModal from '@/components/InvoiceModal'
+import { Ruler, Sparkles, Check, Camera, ShoppingBag, LogOut, Package, ArrowRight, Printer } from 'lucide-react'
 
 const SIZE_PRESETS: Record<string, { thumb: number; index: number; middle: number; ring: number; pinky: number }> = {
   XS: { thumb: 14, index: 11, middle: 12, ring: 10, pinky: 8 },
@@ -25,6 +26,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [isSizingModalOpen, setIsSizingModalOpen] = useState(false)
   const [savingSizing, setSavingSizing] = useState(false)
+  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null)
 
   // Sizing Profile State
   const [preset, setPreset] = useState<string>('M')
@@ -374,13 +376,20 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       Paid
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize bg-gray-100 text-gray-700">
                       {order.fulfillment_status || 'Pending'}
                     </span>
+                    <button
+                      onClick={() => setSelectedInvoice(order)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg transition-colors"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-brand" />
+                      <span>Invoice (PDF)</span>
+                    </button>
                     <span className="font-bold text-gray-900 text-base sm:ml-2">
                       ₹{Number(order.total_amount).toLocaleString('en-IN')}
                     </span>
@@ -424,6 +433,11 @@ export default function DashboardPage() {
       </section>
 
       <SizingGuideModal isOpen={isSizingModalOpen} onClose={() => setIsSizingModalOpen(false)} />
+      <InvoiceModal
+        isOpen={!!selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+        order={selectedInvoice}
+      />
     </div>
   )
 }

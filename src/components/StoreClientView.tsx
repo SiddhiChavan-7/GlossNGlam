@@ -8,16 +8,21 @@ import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animations/F
 import ProductModal from './ProductModal'
 import CartDrawer from './CartDrawer'
 import CheckoutModal from './CheckoutModal'
+import WishlistDrawer from './WishlistDrawer'
 import VIPInstagramCard from './VIPInstagramCard'
+import Footer from '@/components/Footer'
 import Interactive3DCard from './animations/Interactive3DCard'
 import MagneticButton from './animations/MagneticButton'
-import { Truck, ShieldCheck, Sparkles, Instagram, Star, ArrowRight } from 'lucide-react'
+import { Truck, ShieldCheck, Sparkles, Instagram, Star, ArrowRight, Heart } from 'lucide-react'
+import { useWishlist } from '@/context/WishlistContext'
 
 export default function StoreClientView({ initialProducts }: { initialProducts: Product[] }) {
   const [activeCategory, setActiveCategory] = useState<string>('All')
   const [activeProduct, setActiveProduct] = useState<Product | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false)
+  const { isWishlisted, toggleWishlist } = useWishlist()
 
   // Dynamically extract categories from products
   const categoryList = useMemo(() => {
@@ -45,6 +50,8 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
   const closeCart = () => setIsCartOpen(false)
   const openCheckout = () => setIsCheckoutOpen(true)
   const closeCheckout = () => setIsCheckoutOpen(false)
+  const openWishlist = () => setIsWishlistOpen(true)
+  const closeWishlist = () => setIsWishlistOpen(false)
   const openProduct = (product: Product) => setActiveProduct(product)
   const closeProduct = () => setActiveProduct(null)
 
@@ -56,11 +63,17 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
           THE GLOSS COLLECTION ✨ PREMIUM HANDCRAFTED LUXURY ✨ FREE SHIPPING ON ORDERS OVER ₹599 ✨
         </div>
       </div>
-      <Navbar onCartClick={openCart} />
+      <Navbar onCartClick={openCart} onWishlistClick={openWishlist} />
       <main className="overflow-hidden">
         {/* Drawers / Modals */}
         <ProductModal isOpen={!!activeProduct} onClose={closeProduct} product={activeProduct} />
         <CartDrawer isOpen={isCartOpen} onClose={closeCart} onCheckout={openCheckout} />
+        <WishlistDrawer
+          isOpen={isWishlistOpen}
+          onClose={closeWishlist}
+          products={initialProducts}
+          onSelectProduct={openProduct}
+        />
         <CheckoutModal isOpen={isCheckoutOpen} onClose={closeCheckout} />
 
         {/* Hero */}
@@ -199,6 +212,25 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
                           </span>
                         )}
                       </div>
+
+                      {/* Wishlist Heart Toggle */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleWishlist(product.id, product.name)
+                        }}
+                        aria-label="Save to Wishlist"
+                        className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-md group/heart border border-pink-100"
+                      >
+                        <Heart
+                          className={`w-4 h-4 transition-colors ${
+                            isWishlisted(product.id)
+                              ? 'fill-rose-500 text-rose-500'
+                              : 'text-gray-600 group-hover/heart:text-rose-500'
+                          }`}
+                        />
+                      </button>
                     </div>
 
                     <div className="p-5 flex-1 flex flex-col justify-between">
@@ -277,65 +309,7 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
           <VIPInstagramCard />
         </FadeIn>
 
-        <footer className="relative overflow-hidden py-14 border-t border-pink-900/30 text-stone-200">
-          {/* Leopard pattern background */}
-          <div
-            className="absolute inset-0 bg-cover bg-center pointer-events-none"
-            style={{ backgroundImage: `url('/leopard-pattern.jpg')` }}
-          />
-          {/* Deep dark luxury tint overlay for perfect contrast and readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-[#1a080d]/85 to-black/92 backdrop-blur-[1px] pointer-events-none" />
-
-          <div className="relative z-10 max-w-6xl mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm pb-10 border-b border-white/10">
-              <div>
-                <p className="text-[#FAF6F0] font-bold text-xl tracking-wide mb-3 drop-shadow-sm">
-                  Gloss<span className="italic font-light text-pink-300">Nails</span>
-                </p>
-                <p className="text-stone-300 text-xs leading-relaxed max-w-xs">
-                  Handcrafted luxury press-on nails. Salon-grade gel finish, sculpted to order with love.
-                </p>
-              </div>
-
-              <div>
-                <p className="text-[#FAF6F0] font-semibold mb-3 text-xs uppercase tracking-wider text-pink-200">Quick Links</p>
-                <div className="flex flex-col gap-2 text-xs">
-                  <Link href="/" className="text-stone-300 hover:text-white transition-colors">Home</Link>
-                  <Link href="/catalog" className="text-stone-300 hover:text-white transition-colors font-semibold text-pink-300">Full Catalog →</Link>
-                  <a href="https://ig.me/m/_glossnglam8" target="_blank" rel="noopener noreferrer" className="text-stone-300 hover:text-white transition-colors">Instagram DM Sizing</a>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[#FAF6F0] font-semibold mb-3 text-xs uppercase tracking-wider text-pink-200">Support & Delivery</p>
-                <div className="flex flex-col gap-2 text-xs text-stone-300">
-                  <span>📦 Shipping: 4-7 Days Across India</span>
-                  <span>✨ Prep Kit Included with Every Set</span>
-                  <a href="https://ig.me/m/_glossnglam8" target="_blank" rel="noopener noreferrer" className="hover:text-pink-300 transition-colors">
-                    DM @_glossnglam8 for Custom Sizing
-                  </a>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[#FAF6F0] font-semibold mb-3 text-xs uppercase tracking-wider text-pink-200">Store Staff</p>
-                <div className="flex flex-col gap-2">
-                  <Link
-                    href="/admin"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-[#FAF6F0] transition-colors text-xs font-medium border border-white/10 w-fit backdrop-blur-sm"
-                  >
-                    <span>🔐 Admin Portal</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-stone-400">
-              <p>© {new Date().getFullYear()} Gloss n Glam. All rights reserved.</p>
-              <p className="text-stone-400 text-[11px] tracking-wider uppercase">Bespoke Press-On Nails • Made in India</p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </main>
     </>
   )

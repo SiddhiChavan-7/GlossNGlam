@@ -4,13 +4,15 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { Order } from '@/lib/types'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Printer } from 'lucide-react'
+import InvoiceModal from '@/components/InvoiceModal'
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('id')
   const [order, setOrder] = useState<any | null>(null)
   const [copied, setCopied] = useState(false)
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false)
 
   useEffect(() => {
     if (orderId) {
@@ -110,6 +112,14 @@ function OrderSuccessContent() {
               <span className="text-gray-800 font-medium">4–7 business days</span>
             </div>
           </div>
+
+          <button
+            onClick={() => setIsInvoiceOpen(true)}
+            className="w-full mt-3 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all shadow-2xs"
+          >
+            <Printer className="w-3.5 h-3.5 text-brand" />
+            <span>Download / Print Official Invoice (PDF)</span>
+          </button>
         </div>
       )}
 
@@ -125,6 +135,12 @@ function OrderSuccessContent() {
           Back to Home
         </Link>
       </div>
+
+      <InvoiceModal
+        isOpen={isInvoiceOpen}
+        onClose={() => setIsInvoiceOpen(false)}
+        order={order}
+      />
     </main>
   )
 }

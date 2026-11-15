@@ -90,6 +90,18 @@ create table if not exists promo_codes (
   created_at timestamptz not null default now()
 );
 
+-- Product customer reviews & real photos
+create table if not exists product_reviews (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid references products(id) on delete cascade,
+  customer_name text not null,
+  rating integer not null check (rating >= 1 and rating <= 5),
+  comment text not null,
+  photo_url text,
+  is_verified boolean default true,
+  created_at timestamptz not null default now()
+);
+
 -- Helpful indexes for joins / common lookups
 create index if not exists idx_products_category_id on products(category_id);
 create index if not exists idx_order_items_order_id on order_items(order_id);

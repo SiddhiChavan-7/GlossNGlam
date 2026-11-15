@@ -63,6 +63,17 @@ export interface PromoCode {
   is_active: boolean
 }
 
+export interface ProductReview {
+  id: string
+  product_id: string
+  customer_name: string
+  rating: number
+  comment: string
+  photo_url?: string | null
+  is_verified?: boolean
+  created_at: string
+}
+
 export interface SavedSizingProfile {
   preset?: string
   preferred_shape?: string

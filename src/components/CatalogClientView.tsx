@@ -8,9 +8,12 @@ import Navbar from '@/components/Navbar'
 import ProductModal from './ProductModal'
 import CartDrawer from './CartDrawer'
 import CheckoutModal from './CheckoutModal'
+import WishlistDrawer from './WishlistDrawer'
 import SizingGuideModal from './SizingGuideModal'
+import Footer from '@/components/Footer'
 import { Product, Category } from '@/lib/types'
 import { COLOR_FAMILIES, matchesSearchWithColorIntelligence, filterProductsByColorFamily } from '@/lib/colors'
+import { useWishlist } from '@/context/WishlistContext'
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animations/FadeIn'
 import {
   Search,
@@ -20,7 +23,8 @@ import {
   Sparkles,
   ArrowRight,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Heart
 } from 'lucide-react'
 
 const NAIL_SHAPES = ['almond', 'coffin', 'square', 'stiletto', 'oval', 'round']
@@ -38,7 +42,9 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
   const [activeProduct, setActiveProduct] = useState<Product | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false)
   const [isSizingModalOpen, setIsSizingModalOpen] = useState(false)
+  const { isWishlisted, toggleWishlist } = useWishlist()
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
@@ -132,11 +138,20 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
         ✨ Complimentary Salon Prep Kit With Every Order • Free Shipping Over ₹599
       </div>
 
-      <Navbar onCartClick={() => setIsCartOpen(true)} />
+      <Navbar
+        onCartClick={() => setIsCartOpen(true)}
+        onWishlistClick={() => setIsWishlistOpen(true)}
+      />
 
       {/* Modals */}
       <ProductModal isOpen={!!activeProduct} onClose={() => setActiveProduct(null)} product={activeProduct} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} onCheckout={() => setIsCheckoutOpen(true)} />
+      <WishlistDrawer
+        isOpen={isWishlistOpen}
+        onClose={() => setIsWishlistOpen(false)}
+        products={initialProducts}
+        onSelectProduct={(p) => setActiveProduct(p)}
+      />
       <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
       <SizingGuideModal isOpen={isSizingModalOpen} onClose={() => setIsSizingModalOpen(false)} />
 
@@ -339,6 +354,25 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
                       )}
                     </div>
 
+                    {/* Wishlist Heart Toggle */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleWishlist(product.id, product.name)
+                      }}
+                      aria-label="Save to Wishlist"
+                      className="absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-md group/heart border border-pink-100"
+                    >
+                      <Heart
+                        className={`w-3.5 h-3.5 transition-colors ${
+                          isWishlisted(product.id)
+                            ? 'fill-rose-500 text-rose-500'
+                            : 'text-gray-600 group-hover/heart:text-rose-500'
+                        }`}
+                      />
+                    </button>
+
                     {/* Quick view button appearing on hover */}
                     <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block">
                       <div className="w-full py-2.5 bg-white/95 backdrop-blur-md text-gray-900 text-xs font-semibold rounded-xl text-center shadow-md hover:bg-white transition-colors">
@@ -444,62 +478,7 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
         </section>
       </main>
 
-      {/* Professional Minimal Footer */}
-      <footer className="border-t border-gray-100 bg-white py-12 text-xs text-gray-500">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div>
-            <Link href="/" className="text-base font-bold text-gray-900 tracking-wide block mb-2">
-              Gloss<span className="text-brand font-light italic">Nails</span>
-            </Link>
-            <p className="text-gray-400 leading-relaxed text-[11px]">
-              Bespoke luxury press-on nails. Handcrafted in India with salon-quality gel.
-            </p>
-          </div>
-
-          <div>
-            <p className="font-semibold text-gray-900 uppercase tracking-wider text-[10px] mb-3">Explore</p>
-            <ul className="space-y-2">
-              <li><Link href="/" className="hover:text-gray-900 transition-colors">Home & Best Sellers</Link></li>
-              <li><Link href="/catalog" className="text-brand font-medium">Full Catalog</Link></li>
-              <li><button onClick={() => setIsSizingModalOpen(true)} className="hover:text-gray-900 transition-colors">Coin Sizing Guide</button></li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-semibold text-gray-900 uppercase tracking-wider text-[10px] mb-3">Aesthetics</p>
-            <ul className="space-y-2">
-              {categoryList.slice(1, 5).map(cat => (
-                <li key={cat}>
-                  <button
-                    onClick={() => { setSelectedCategory(cat); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                    className="hover:text-gray-900 transition-colors text-left"
-                  >
-                    {cat}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-semibold text-gray-900 uppercase tracking-wider text-[10px] mb-3">Customer Support</p>
-            <p className="text-[11px] text-gray-400 mb-2">Have a question about nail sizing or custom orders?</p>
-            <a
-              href="https://www.instagram.com/_glossnglam8"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-brand font-medium hover:underline"
-            >
-              <Instagram className="w-3.5 h-3.5" /> @_glossnglam8
-            </a>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 md:px-8 mt-10 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-gray-400">
-          <span>© {new Date().getFullYear()} GlossNails. Handcrafted luxury press-on nails.</span>
-          <span>Free delivery across India on orders over ₹599</span>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

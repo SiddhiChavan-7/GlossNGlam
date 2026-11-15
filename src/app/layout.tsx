@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Outfit } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '@/context/CartContext'
+import { WishlistProvider } from '@/context/WishlistContext'
 import { Toaster } from 'react-hot-toast'
 import CustomCursor from '@/components/CustomCursor'
 import { AuthProvider } from '@/components/UserContext'
@@ -20,11 +21,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${outfit.variable} font-sans bg-[#FAFAFA] min-h-screen relative`}>
         <CustomCursor />
         <AuthProvider>
-          <CartProvider>
-            {children}
-            <AuthPromptModal />
-            <Toaster position="top-center" toastOptions={{ style: { borderRadius: '12px', background: '#333', color: '#fff', fontFamily: 'inherit' } }} />
-          </CartProvider>
+          <WishlistProvider>
+            <CartProvider>
+              {children}
+              <AuthPromptModal />
+              <Toaster position="top-center" toastOptions={{ style: { borderRadius: '12px', background: '#333', color: '#fff', fontFamily: 'inherit' } }} />
+            </CartProvider>
+          </WishlistProvider>
         </AuthProvider>
       </body>
     </html>
