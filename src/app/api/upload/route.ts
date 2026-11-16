@@ -13,9 +13,9 @@ export const runtime = 'nodejs'
 // Accepts multipart/form-data with a 'file' field
 export async function POST(req: NextRequest) {
   try {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-    const apiKey = process.env.CLOUDINARY_API_KEY
-    const apiSecret = process.env.CLOUDINARY_API_SECRET
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'axwcoz2j'
+    const apiKey = process.env.CLOUDINARY_API_KEY || '413518711574834'
+    const apiSecret = process.env.CLOUDINARY_API_SECRET || 't336NfDb2vJvhNWLp3TPYTBB-9A'
 
     if (!cloudName || !apiKey || !apiSecret) {
       console.error('Missing Cloudinary creds:', { cloudName: !!cloudName, apiKey: !!apiKey, apiSecret: !!apiSecret })
