@@ -26,6 +26,50 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
   const [selectedSize, setSelectedSize] = useState('')
   const [isSizingModalOpen, setIsSizingModalOpen] = useState(false)
   const [isVisualizerOpen, setIsVisualizerOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = async () => {
+    if (!product) return
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://gloss-n-glam.vercel.app'
+    const pathname = typeof window !== 'undefined' && window.location.pathname.includes('catalog') ? '/catalog' : '/'
+    const shareUrl = `${origin}${pathname}?product=${product.id}`
+
+    const shareData = {
+      title: `${product.name} | Gloss & Glam`,
+      text: `Check out ${product.name} (₹${product.price}) handcrafted luxury press-on nails on Gloss & Glam! ✨`,
+      url: shareUrl,
+    }
+
+    // Try native Web Share API (mobile phones, tablets, supported browsers)
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share(shareData)
+        return
+      } catch (err: any) {
+        if (err.name === 'AbortError') return // User cancelled
+      }
+    }
+
+    // Fallback: Copy direct URL to clipboard
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl)
+      } else {
+        const input = document.createElement('input')
+        input.value = shareUrl
+        document.body.appendChild(input)
+        input.select()
+        document.execCommand('copy')
+        document.body.removeChild(input)
+      }
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+      toast.success('Product link copied! Share with friends ✨', { icon: '🔗' })
+    } catch {
+      toast.error('Unable to copy link to clipboard.')
+    }
+  }
 
   // Reviews state
   const [reviews, setReviews] = useState<ProductReview[]>([])
@@ -138,10 +182,26 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
           >
             {/* Header */}
             <div className="absolute top-4 right-4 z-10 flex gap-2">
-              <button className="p-3 bg-white/80 backdrop-blur rounded-full hover:bg-white shadow">
-                <Share2 className="w-5 h-5 text-gray-700" />
+              <button
+                type="button"
+                onClick={handleShare}
+                title={copied ? 'Link Copied!' : 'Share this product'}
+                aria-label="Share this product"
+                className="p-3 bg-white/90 backdrop-blur rounded-full hover:bg-white active:scale-95 shadow transition-all flex items-center justify-center cursor-pointer"
+              >
+                {copied ? (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 transition-transform scale-110" />
+                ) : (
+                  <Share2 className="w-5 h-5 text-gray-700 hover:text-brand transition-colors" />
+                )}
               </button>
-              <button onClick={onClose} className="p-3 bg-white/80 backdrop-blur rounded-full hover:bg-gray-100 shadow">
+              <button
+                type="button"
+                onClick={onClose}
+                title="Close modal"
+                aria-label="Close modal"
+                className="p-3 bg-white/90 backdrop-blur rounded-full hover:bg-gray-100 active:scale-95 shadow transition-all cursor-pointer"
+              >
                 <X className="w-5 h-5 text-gray-700" />
               </button>
             </div>

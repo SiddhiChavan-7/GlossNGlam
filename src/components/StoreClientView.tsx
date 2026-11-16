@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import ProductCard from '@/components/ProductCard'
@@ -45,6 +45,22 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
     )
   }, [initialProducts, activeCategory])
 
+  // Deep-link auto-open for shared product links (?product=id or ?product=slug)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const productId = params.get('product')
+    if (productId && initialProducts && initialProducts.length > 0) {
+      const match = initialProducts.find(
+        p => String(p.id).toLowerCase() === productId.toLowerCase() ||
+             p.name.toLowerCase().replace(/\s+/g, '-') === productId.toLowerCase()
+      )
+      if (match) {
+        setActiveProduct(match)
+      }
+    }
+  }, [initialProducts])
+
   // Handlers for Drawer states
   const openCart = () => setIsCartOpen(true)
   const closeCart = () => setIsCartOpen(false)
@@ -52,8 +68,22 @@ export default function StoreClientView({ initialProducts }: { initialProducts: 
   const closeCheckout = () => setIsCheckoutOpen(false)
   const openWishlist = () => setIsWishlistOpen(true)
   const closeWishlist = () => setIsWishlistOpen(false)
-  const openProduct = (product: Product) => setActiveProduct(product)
-  const closeProduct = () => setActiveProduct(null)
+  const openProduct = (product: Product) => {
+    setActiveProduct(product)
+    if (typeof window !== 'undefined') {
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.set('product', product.id)
+      window.history.replaceState({}, '', newUrl.toString())
+    }
+  }
+  const closeProduct = () => {
+    setActiveProduct(null)
+    if (typeof window !== 'undefined') {
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('product')
+      window.history.replaceState({}, '', newUrl.toString())
+    }
+  }
 
   return (
     <>

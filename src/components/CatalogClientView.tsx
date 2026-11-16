@@ -60,6 +60,40 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
     }
   }, [categoryParam])
 
+  // Deep-link auto-open for shared product links (?product=id or ?product=slug)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const productId = params.get('product')
+    if (productId && initialProducts && initialProducts.length > 0) {
+      const match = initialProducts.find(
+        p => String(p.id).toLowerCase() === productId.toLowerCase() ||
+             p.name.toLowerCase().replace(/\s+/g, '-') === productId.toLowerCase()
+      )
+      if (match) {
+        setActiveProduct(match)
+      }
+    }
+  }, [initialProducts])
+
+  const handleOpenProduct = (product: Product) => {
+    setActiveProduct(product)
+    if (typeof window !== 'undefined') {
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.set('product', product.id)
+      window.history.replaceState({}, '', newUrl.toString())
+    }
+  }
+
+  const handleCloseProduct = () => {
+    setActiveProduct(null)
+    if (typeof window !== 'undefined') {
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('product')
+      window.history.replaceState({}, '', newUrl.toString())
+    }
+  }
+
   // Category list
   const categoryList = useMemo(() => {
     const list = ['All']
@@ -144,13 +178,13 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
       />
 
       {/* Modals */}
-      <ProductModal isOpen={!!activeProduct} onClose={() => setActiveProduct(null)} product={activeProduct} />
+      <ProductModal isOpen={!!activeProduct} onClose={handleCloseProduct} product={activeProduct} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} onCheckout={() => setIsCheckoutOpen(true)} />
       <WishlistDrawer
         isOpen={isWishlistOpen}
         onClose={() => setIsWishlistOpen(false)}
         products={initialProducts}
-        onSelectProduct={(p) => setActiveProduct(p)}
+        onSelectProduct={handleOpenProduct}
       />
       <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
       <SizingGuideModal isOpen={isSizingModalOpen} onClose={() => setIsSizingModalOpen(false)} />
@@ -328,7 +362,7 @@ export default function CatalogClientView({ initialProducts, categories }: Catal
             return (
               <StaggerItem key={product.id}>
                 <div
-                  onClick={() => setActiveProduct(product)}
+                  onClick={() => handleOpenProduct(product)}
                   className="group cursor-pointer flex flex-col h-full"
                 >
                   {/* Image container */}
