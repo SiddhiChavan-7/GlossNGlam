@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/components/UserContext'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,12 +55,37 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2 block">Password</label>
-            <input
-              type="password" required value={password} onChange={e => setPassword(e.target.value)} minLength={6}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all"
-              placeholder="••••••••"
-            />
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider block">Password</label>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-xs text-brand hover:text-brand/80 font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span>{showPassword ? 'Hide' : 'View password'}</span>
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                minLength={6}
+                className="w-full pl-4 pr-11 py-3 rounded-xl border border-gray-200 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all font-mono tracking-wider placeholder-gray-400"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                title={showPassword ? 'Hide password' : 'View password'}
+                aria-label={showPassword ? 'Hide password' : 'View password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4 text-brand" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <button
