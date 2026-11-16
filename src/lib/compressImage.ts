@@ -91,3 +91,4 @@ export async function compressImage(file: File, maxDimension = 1920, quality = 0
     reader.readAsDataURL(file)
   })
 }
+
