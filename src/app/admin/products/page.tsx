@@ -5,7 +5,7 @@ import AdminSidebar from '@/components/AdminSidebar'
 
 import { Product, Category } from '@/lib/types'
 import { COLOR_FAMILIES } from '@/lib/colors'
-import { Plus, Pencil, Trash2, X, Upload } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Upload, Tag } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 import { compressImage } from '@/lib/compressImage'
@@ -37,6 +37,56 @@ export default function AdminProductsPage() {
   const [urlInput, setUrlInput] = useState('')
   const [saving, setSaving] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Category manager states
+  const [showCategoryManager, setShowCategoryManager] = useState(false)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [deletingCatId, setDeletingCatId] = useState<string | null>(null)
+
+  const handleDeleteCategory = async (catId: string, catName: string) => {
+    if (!confirm(`Are you sure you want to delete the category "${catName}"?`)) return
+    setDeletingCatId(catId)
+    try {
+      const res = await fetch(`/api/products/categories?id=${catId}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to delete category')
+
+      toast.success(`Category "${catName}" deleted!`)
+      setCategories(prev => prev.filter(c => c.id !== catId))
+      if (form.category_id === catId) {
+        setForm(prev => ({ ...prev, category_id: '' }))
+      }
+      loadData()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete category')
+    } finally {
+      setDeletingCatId(null)
+    }
+  }
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCatName.trim()) return
+    setCreatingCategory(true)
+    try {
+      const res = await fetch('/api/products/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCatName.trim() })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to create category')
+      toast.success(`Category "${newCatName.trim()}" created!`)
+      setNewCatName('')
+      loadData()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create category')
+    } finally {
+      setCreatingCategory(false)
+    }
+  }
 
   useEffect(() => {
     if (!localStorage.getItem('admin-auth')) { router.push('/admin/login'); return }
@@ -277,9 +327,20 @@ export default function AdminProductsPage() {
             <h1 className="text-xl sm:text-2xl font-bold text-white">Products & Inventory</h1>
             <p className="text-xs text-gray-400 mt-0.5">Manage catalog pricing, stock & photos</p>
           </div>
-          <button onClick={openAdd} className="flex items-center gap-1.5 sm:gap-2 bg-brand text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity shrink-0">
-            <Plus className="w-4 h-4" /> <span>Add Product</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCategoryModal(true)}
+              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-900 border border-gray-800 text-gray-300 hover:text-white hover:border-gray-700 transition-colors shrink-0 cursor-pointer shadow-sm"
+              title="Manage and delete categories"
+            >
+              <Tag className="w-3.5 h-3.5 text-brand" />
+              <span>Categories ({categories.length})</span>
+            </button>
+            <button onClick={openAdd} className="flex items-center gap-1.5 sm:gap-2 bg-brand text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity shrink-0 cursor-pointer">
+              <Plus className="w-4 h-4" /> <span>Add Product</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -470,7 +531,47 @@ export default function AdminProductsPage() {
                 ))}
 
                 <div>
-                  <label className="text-xs text-gray-400 mb-1.5 block">Category</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs text-gray-400 font-medium block">Category</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowCategoryManager(!showCategoryManager)}
+                      className="text-[11px] text-brand hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Tag className="w-3 h-3" />
+                      <span>{showCategoryManager ? 'Hide Categories' : 'Manage / Delete Categories'}</span>
+                    </button>
+                  </div>
+
+                  {/* Inline Category Deletion Drawer */}
+                  {showCategoryManager && (
+                    <div className="p-3 bg-gray-950/90 rounded-xl border border-gray-800 mb-2.5 space-y-2 animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-gray-300">Existing Categories</span>
+                        <span className="text-[10px] text-gray-500">Tap 🗑 to delete unwanted</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+                        {categories.map(c => (
+                          <div
+                            key={c.id}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-900 border border-gray-700/80 text-xs text-gray-300 shadow-sm"
+                          >
+                            <span>{c.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCategory(c.id, c.name)}
+                              disabled={deletingCatId === c.id}
+                              className="text-gray-400 hover:text-red-400 p-0.5 rounded transition-colors disabled:opacity-50 cursor-pointer"
+                              title={`Delete ${c.name}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <select
                     value={form.category_id}
                     onChange={e => setForm(prev => ({ ...prev, category_id: e.target.value }))}
@@ -572,6 +673,88 @@ export default function AdminProductsPage() {
                   className="w-full py-3 bg-brand text-white rounded-xl font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition-opacity"
                 >
                   {saving ? 'Saving...' : editProduct ? 'Update Product' : 'Add Product'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dedicated Categories Management Modal */}
+        {showCategoryModal && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+            <div className="bg-gray-900 rounded-2xl w-full max-w-md border border-gray-800 shadow-2xl overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between p-5 border-b border-gray-800">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-brand" />
+                  <h2 className="text-white font-bold text-base">Manage Categories</h2>
+                </div>
+                <button
+                  onClick={() => setShowCategoryModal(false)}
+                  className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Add New Category Input */}
+              <form onSubmit={handleCreateCategory} className="p-4 border-b border-gray-800 bg-gray-950/60 flex gap-2">
+                <input
+                  type="text"
+                  placeholder="New category name (e.g. Bridal)..."
+                  value={newCatName}
+                  onChange={e => setNewCatName(e.target.value)}
+                  className="flex-1 px-3.5 py-2 bg-gray-800 text-white rounded-xl text-xs border border-gray-700 focus:outline-none focus:border-brand placeholder-gray-500"
+                />
+                <button
+                  type="submit"
+                  disabled={creatingCategory || !newCatName.trim()}
+                  className="px-4 py-2 bg-brand text-white rounded-xl text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity shrink-0"
+                >
+                  {creatingCategory ? 'Adding...' : '+ Add'}
+                </button>
+              </form>
+
+              {/* Category List with Delete Buttons */}
+              <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2">
+                <p className="text-[11px] text-gray-400 font-medium mb-3">
+                  Click the trash button to delete unwanted categories. Any existing products will be safely reassigned.
+                </p>
+
+                {categories.length === 0 ? (
+                  <p className="text-center text-xs text-gray-500 py-6">No categories found.</p>
+                ) : (
+                  categories.map(cat => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between p-3 rounded-xl bg-gray-800/80 border border-gray-700/60 hover:border-gray-600 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Tag className="w-4 h-4 text-brand" />
+                        <span className="text-sm text-white font-medium">{cat.name}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                        disabled={deletingCatId === cat.id}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-950/50 transition-colors border border-red-900/30 disabled:opacity-50 cursor-pointer"
+                        title={`Delete ${cat.name}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="p-4 border-t border-gray-800 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(false)}
+                  className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Done
                 </button>
               </div>
             </div>
