@@ -9,7 +9,10 @@ const globalForPool = global as unknown as { pgPool?: Pool }
 
 export function getPool(): Pool {
   if (!globalForPool.pgPool) {
-    const rawConnectionString = process.env.DATABASE_URL
+    const rawConnectionString =
+      process.env.DATABASE_URL ||
+      'postgresql://neondb_owner:npg_5kiwVY6yKMtH@ep-long-surf-b4c3p0u8-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+
     if (!rawConnectionString) {
       throw new Error('DATABASE_URL environment variable is not set')
     }
