@@ -192,7 +192,7 @@ export default function AdminProductsPage() {
         fd.append('file', file)
 
         const res = await fetch('/api/upload', { method: 'POST', body: fd })
-        
+
         let data: any
         try {
           data = await res.json()
@@ -362,11 +362,10 @@ export default function AdminProductsPage() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); toggleShowOnHome(product) }}
-                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shadow transition-all ${
-                      product.show_on_home !== false
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shadow transition-all ${product.show_on_home !== false
                         ? 'bg-emerald-600/90 hover:bg-emerald-500 text-white'
                         : 'bg-gray-800/90 hover:bg-gray-700 text-gray-300'
-                    }`}
+                      }`}
                     title="Click to toggle Main Page visibility"
                   >
                     {product.show_on_home !== false ? '✓ On Main Page' : 'Catalog Only'}
@@ -488,9 +487,8 @@ export default function AdminProductsPage() {
                     })}
                     <label
                       htmlFor="product-photo-upload"
-                      className={`w-24 h-24 border-2 border-dashed border-gray-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand transition-colors relative select-none ${
-                        uploading ? 'opacity-60 cursor-not-allowed pointer-events-none' : ''
-                      }`}
+                      className={`w-24 h-24 border-2 border-dashed border-gray-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand transition-colors relative select-none ${uploading ? 'opacity-60 cursor-not-allowed pointer-events-none' : ''
+                        }`}
                     >
                       <Upload className={`w-5 h-5 mb-1 ${uploading ? 'text-brand animate-pulse' : 'text-gray-500'}`} />
                       <span className="text-[10px] text-gray-400 text-center px-1 font-medium">
@@ -533,35 +531,68 @@ export default function AdminProductsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs text-gray-400 font-medium block">Category</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowCategoryManager(!showCategoryManager)}
-                      className="text-[11px] text-brand hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Tag className="w-3 h-3" />
-                      <span>{showCategoryManager ? 'Hide Categories' : 'Manage / Delete Categories'}</span>
-                    </button>
+                    <span className="text-[11px] text-gray-500">
+                      Tap <Trash2 className="w-3 h-3 inline text-red-400" /> below to delete unwanted categories
+                    </span>
                   </div>
 
-                  {/* Inline Category Deletion Drawer */}
-                  {showCategoryManager && (
-                    <div className="p-3 bg-gray-950/90 rounded-xl border border-gray-800 mb-2.5 space-y-2 animate-in fade-in">
+                  <div className="flex items-center gap-2 mb-2">
+                    <select
+                      value={form.category_id}
+                      onChange={e => setForm(prev => ({ ...prev, category_id: e.target.value }))}
+                      className="flex-1 px-4 py-2.5 bg-gray-800 text-white rounded-xl text-sm border border-gray-700 focus:outline-none focus:border-brand"
+                    >
+                      <option value="">Select category</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      <option value="NEW" className="font-bold text-brand">+ Add New Category</option>
+                    </select>
+
+                    {form.category_id && form.category_id !== 'NEW' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cat = categories.find(c => c.id === form.category_id)
+                          if (cat) handleDeleteCategory(cat.id, cat.name)
+                        }}
+                        disabled={deletingCatId === form.category_id}
+                        className="px-3 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 flex-shrink-0 cursor-pointer shadow-sm"
+                        title="Delete this selected category"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>{deletingCatId === form.category_id ? 'Deleting...' : 'Delete Category'}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Quick Category Chips with instant Delete button */}
+                  {categories.length > 0 && (
+                    <div className="p-2.5 bg-gray-950/80 rounded-xl border border-gray-800/80 mb-2 space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-gray-300">Existing Categories</span>
-                        <span className="text-[10px] text-gray-500">Tap 🗑 to delete unwanted</span>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">All Categories (Click 🗑 to remove):</span>
+                        <span className="text-[10px] text-gray-500">{categories.length} total</span>
                       </div>
-                      <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+                      <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto custom-scrollbar">
                         {categories.map(c => (
                           <div
                             key={c.id}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-900 border border-gray-700/80 text-xs text-gray-300 shadow-sm"
+                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs transition-colors ${
+                              form.category_id === c.id
+                                ? 'bg-brand/20 border border-brand/50 text-white'
+                                : 'bg-gray-900 border border-gray-700/60 text-gray-300'
+                            }`}
                           >
-                            <span>{c.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => setForm(prev => ({ ...prev, category_id: c.id }))}
+                              className="hover:underline cursor-pointer"
+                            >
+                              {c.name}
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteCategory(c.id, c.name)}
                               disabled={deletingCatId === c.id}
-                              className="text-gray-400 hover:text-red-400 p-0.5 rounded transition-colors disabled:opacity-50 cursor-pointer"
+                              className="text-gray-400 hover:text-red-400 hover:bg-red-500/20 p-0.5 rounded transition-all disabled:opacity-50 cursor-pointer"
                               title={`Delete ${c.name}`}
                             >
                               <Trash2 className="w-3 h-3" />
@@ -572,23 +603,13 @@ export default function AdminProductsPage() {
                     </div>
                   )}
 
-                  <select
-                    value={form.category_id}
-                    onChange={e => setForm(prev => ({ ...prev, category_id: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-xl text-sm border border-gray-700 focus:outline-none focus:border-brand mb-2"
-                  >
-                    <option value="">Select category</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    <option value="NEW" className="font-bold text-brand">+ Add New Category</option>
-                  </select>
-                  
                   {form.category_id === 'NEW' && (
                     <input
                       type="text"
                       placeholder="Type new category name..."
                       value={form.new_category_name}
                       onChange={e => setForm(prev => ({ ...prev, new_category_name: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-xl text-sm border border-brand focus:outline-none shadow-[0_0_15px_rgba(224,17,95,0.2)] placeholder:text-gray-500"
+                      className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-xl text-sm border border-brand focus:outline-none shadow-[0_0_15px_rgba(224,17,95,0.2)] placeholder:text-gray-500 mb-2"
                       autoFocus
                     />
                   )}
@@ -602,9 +623,8 @@ export default function AdminProductsPage() {
                         key={shape}
                         type="button"
                         onClick={() => toggleShape(shape)}
-                        className={`px-3 py-1.5 rounded-full text-xs capitalize border transition-all ${
-                          form.nail_shapes.includes(shape) ? 'bg-brand text-white border-brand' : 'border-gray-700 text-gray-400 hover:border-gray-500'
-                        }`}
+                        className={`px-3 py-1.5 rounded-full text-xs capitalize border transition-all ${form.nail_shapes.includes(shape) ? 'bg-brand text-white border-brand' : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                          }`}
                       >
                         {shape}
                       </button>
@@ -624,11 +644,10 @@ export default function AdminProductsPage() {
                           key={c.id}
                           type="button"
                           onClick={() => toggleColor(c.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                            isSelected
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${isSelected
                               ? 'bg-brand/20 text-white border-brand shadow-sm'
                               : 'border-gray-700 text-gray-400 hover:border-gray-500'
-                          }`}
+                            }`}
                         >
                           <span
                             className="w-2.5 h-2.5 rounded-full border border-black/30"
